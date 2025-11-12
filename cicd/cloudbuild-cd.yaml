@@ -1,0 +1,48 @@
+# This is the RELEASE pipeline in the CI/CD process
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  substitutionOption: 'ALLOW_LOOSE'
+
+substitutions:
+  _ENV: 'test'                # Can be overridden in Cloud Build UI
+  _IMAGE_TAG: 'latest'        # Can be overridden in Cloud Build UI
+
+steps:
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'helm-deploy'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        apt-get update && apt-get install -y kubectl
+        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+        case "${_ENV}" in
+          prod)
+            cluster="rcal-prod-cluster"
+            namespace="rcal-prod"
+            ;;
+          test)
+            cluster="rcal-test-cluster"
+            namespace="rcal-test"
+            ;;
+          *)
+            echo "Unknown environment: ${_ENV}"
+            exit 1
+            ;;
+        esac
+
+        gcloud container clusters get-credentials "$cluster" --region us-south1 --project "$PROJECT_ID"
+
+        # Deploy Helm chart with Ingress static IP
+        helm upgrade --install rats-backend-ws-people-${_ENV} ./helm \
+          -f ./helm/env-overrides/values.${_ENV}.yaml \
+          --set image.repository=us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people \
+          --set image.tag=${_IMAGE_TAG} \
+          --set image.pullPolicy=Always \
+          --set ingress.path="/people" \
+          --set redeployTimestamp="$(date +%s)" \
+          --namespace "$namespace" \
+          --create-namespace \
+          --atomic --wait --timeout 5m

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app: {{ .Release.Name }}
+    release: {{ .Release.Name }}
+data:
+  SPRING_DATASOURCE_READ_URL: {{ .Values.spring.datasource.read.url | quote }}
+  SPRING_DATASOURCE_READ_USERNAME: {{ .Values.spring.datasource.read.username | quote }}
+  SPRING_DATASOURCE_READ_PASSWORD: {{ .Values.spring.datasource.read.password | quote }}
+  SPRING_DATASOURCE_WRITE_URL: {{ .Values.spring.datasource.write.url | quote }}
+  SPRING_DATASOURCE_WRITE_USERNAME: {{ .Values.spring.datasource.write.username | quote }}
+  SPRING_DATASOURCE_WRITE_PASSWORD: {{ .Values.spring.datasource.write.password | quote }}

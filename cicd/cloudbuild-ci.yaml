@@ -1,0 +1,69 @@
+#This is the BUILD pipeline in the CI/CD process
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _SANITIZED_BRANCH: '${BRANCH_NAME//\//-}'
+
+steps:
+  # Run Spotless check using Maven Wrapper
+  - name: 'eclipse-temurin:21-jdk'
+    id: 'spotless-check'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        chmod +x ./mvnw
+        ./mvnw spotless:check
+  
+  
+  # Build the Docker image with SHORT_SHA, latest, and branch name tags
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-and-tag-image'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:${SHORT_SHA}'
+      - '-t'
+      - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:latest'
+      - '-t'
+      - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:${_SANITIZED_BRANCH}'
+      - '.'
+
+  # Scan the image with Trivy for vulnerabilities, fail on HIGH or CRITICAL
+  - name: 'aquasec/trivy:latest'
+    id: 'trivy-scan'
+    args:
+      - 'image'
+      - '--severity'
+      - 'HIGH,CRITICAL'
+      - '--exit-code'
+      - '1'
+      - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:${SHORT_SHA}'
+
+  # Push the SHORT_SHA tagged image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-sha-image'
+    args:
+      - 'push'
+      - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:${SHORT_SHA}'
+
+  # Push the latest tag
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-latest-image'
+    args:
+      - 'push'
+      - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:latest'
+
+  # Push the branch name tag
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-branch-image'
+    args:
+      - 'push'
+      - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:${_SANITIZED_BRANCH}'
+
+images:
+  - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:${SHORT_SHA}'
+  - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:latest'
+  - 'us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people:${_SANITIZED_BRANCH}'

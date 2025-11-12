@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profiles version="21">
+    <profile kind="CodeFormatterProfile" name="CustomTeamFormatter" version="21">
+
+        <!-- 1. Indentation -->
+        <setting id="org.eclipse.jdt.core.formatter.tabulation.char" value="space"/>
+        <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="2"/>
+        <setting id="org.eclipse.jdt.core.formatter.indentation.size" value="2"/>
+
+        <!-- 2. Line wrapping and length -->
+        <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="80"/>
+        <setting id="org.eclipse.jdt.core.formatter.comment.lineLength" value="80"/>
+
+        <!-- 3. Braces -->
+        <setting id="org.eclipse.jdt.core.formatter.brace_position_for_type_declaration" value="end_of_line"/>
+        <setting id="org.eclipse.jdt.core.formatter.brace_position_for_method_declaration" value="end_of_line"/>
+        <setting id="org.eclipse.jdt.core.formatter.brace_position_for_block" value="end_of_line"/>
+        <setting id="org.eclipse.jdt.core.formatter.brace_position_for_anonymous_type" value="end_of_line"/>
+        <setting id="org.eclipse.jdt.core.formatter.brace_position_for_enum_constant" value="end_of_line"/>
+
+        <!-- 4. Whitespace -->
+        <setting id="org.eclipse.jdt.core.formatter.insert_space_after_comma_in_method_invocation_arguments" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.insert_space_after_comma_in_method_declaration_parameters" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.insert_space_around_assignment_operator" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.insert_space_around_binary_operator" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_type_declaration" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_method_declaration" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_block" value="true"/>
+
+        <!-- 5. Comments -->
+        <setting id="org.eclipse.jdt.core.formatter.comment.line_comment_at_column" value="0"/>
+        <setting id="org.eclipse.jdt.core.formatter.comment.format_line_comments" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.comment.format_block_comments" value="false"/>
+
+        <!-- 6. Blank lines -->
+        <setting id="org.eclipse.jdt.core.formatter.blank_lines_before_package" value="0"/>
+        <setting id="org.eclipse.jdt.core.formatter.blank_lines_after_package" value="1"/>
+        <setting id="org.eclipse.jdt.core.formatter.blank_lines_before_imports" value="0"/>
+        <setting id="org.eclipse.jdt.core.formatter.blank_lines_between_import_groups" value="1"/>
+        <setting id="org.eclipse.jdt.core.formatter.blank_lines_after_imports" value="1"/>
+        <setting id="org.eclipse.jdt.core.formatter.blank_lines_before_method" value="1"/>
+
+        <!-- 7. Naming conventions -->
+        <setting id="org.eclipse.jdt.core.formatter.formatter_comment_format_line_comments" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.comment.format_line_comments" value="true"/>
+
+        <!-- 8. Other formatting rules -->
+        <setting id="org.eclipse.jdt.core.formatter.remove_trailing_whitespace" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.keep_empty_lines_in_code" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.join_lines_in_comments" value="false"/>
+
+    </profile>
+</profiles>

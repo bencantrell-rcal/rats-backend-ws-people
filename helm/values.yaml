@@ -1,0 +1,43 @@
+replicas: 2
+containerPort: 8080
+
+image:
+  repository: us-south1-docker.pkg.dev/$PROJECT_ID/rats-backend-ws-people/rats-backend-ws-people
+  tag: latest
+  pullPolicy: Always
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  paths:
+    - path: /people/(.*)
+      serviceName: rats-backend-ws-people-test-service
+      servicePort: 80
+
+# fallback
+# Deployed datasource flow:
+# env override values > config map > pod env vars > Spring property > @Value injection > Hikari datasource >
+# Read/Write JPA configs > Read/Write repositories > Service Layer > Controller Layer > Endpoints
+spring:
+  datasource:
+    read:
+      url: jdbc:mysql://127.0.0.1:3306/rats?useSSL=false&allowPublicKeyRetrieval=true
+      username: devuser
+      password: Rcal_1995!
+    write:
+      url: jdbc:mysql://127.0.0.1:3306/rats?useSSL=false&allowPublicKeyRetrieval=true
+      username: devuser
+      password: Rcal_1995!
+
+redeployTimestamp: "{{ now | unixEpoch }}"
