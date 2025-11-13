@@ -1,6 +1,6 @@
 image:
   tag: prod-latest
-replicas: 2
+replicas: 1
 
 spring:
   datasource:
