@@ -17,6 +17,6 @@ public class OpenApiConfiguration{
   // ---------------------------------------------------------------------------
   @Bean
   public OpenAPI customOpenAPI(){
-    return new OpenAPI().servers(List.of(new Server().url("/people")));
+    return new OpenAPI().servers(List.of(new Server().url("/api")));
   }
 }

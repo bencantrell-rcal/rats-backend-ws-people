@@ -1,10 +1,10 @@
+# Deployed datasource flow:
+# env override values > config map > pod env vars > application.properties > Spring property > @Value injection >
+# Hikari datasource > Read/Write JPA configs > Read/Write repositories > Service Layer > Controller Layer > Endpoints
 image:
   tag: test-latest
 replicas: 1
 
-# Deployed datasource flow:
-# env override values > config map > pod env vars > application.properties > Spring property > @Value injection >
-# Hikari datasource > Read/Write JPA configs > Read/Write repositories > Service Layer > Controller Layer > Endpoints
 spring:
   datasource:
     read:
@@ -21,10 +21,10 @@ cloudsql:
   instanceConnectionName: noble-helper-469522-j1:us-south1:rcal-mysql-dal
 
 ingress:
-  host: api.test.rcal.internal
+  host: people.test.rcal.internal
   tls:
     secretName: test-internal-wildcard-tls
   paths:
-  - path: /people/(.*)
+  - path: /api/(.*)
     serviceName: rats-backend-ws-people-test-service
     servicePort: 80

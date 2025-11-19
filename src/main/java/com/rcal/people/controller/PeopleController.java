@@ -1,7 +1,10 @@
 package com.rcal.people.controller;
 
 import com.rcal.people.entity.Employee;
+import com.rcal.people.model.PeopleDTO;
+import com.rcal.people.model.TeamSkillDTO;
 import com.rcal.people.service.EmployeeService;
+import com.rcal.people.service.MappingService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,9 +22,12 @@ import static com.rcal.people.configuration.OpenApiDescriptionConfiguration.*;
 public class PeopleController{
 
   private final EmployeeService employeeService;
+  private final MappingService mappingService;
 
-  public PeopleController(EmployeeService employeeService) {
+  public PeopleController(EmployeeService employeeService,
+      MappingService mappingService) {
     this.employeeService = employeeService;
+    this.mappingService = mappingService;
   }
 
   // ---------------------------------------------------------------------------
@@ -51,6 +57,24 @@ public class PeopleController{
   @GetMapping("/employees")
   public List<Employee> getAllEmployees(){
     return employeeService.getAllEmployees();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Get all teams and associated skills
+  // ---------------------------------------------------------------------------
+  @Operation(summary = TEAMS_DESCRIPTION)
+  @GetMapping("/teams")
+  public List<TeamSkillDTO> getTeamsWithSkills(){
+    return mappingService.getAllTeamsWithSkills();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Get all people and associated teams and skills
+  // ---------------------------------------------------------------------------
+  @Operation(summary = PEOPLE_DESCRIPTION)
+  @GetMapping("/people")
+  public List<PeopleDTO> getAllPeople(){
+    return mappingService.getAllPeople();
   }
 
 }
