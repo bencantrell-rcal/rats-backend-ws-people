@@ -4,6 +4,7 @@ import com.rcal.people.entity.Mapping;
 import com.rcal.people.model.PeopleDTO;
 import com.rcal.people.model.TeamSkillDTO;
 import com.rcal.people.repository.read.ReadMappingRepository;
+import com.rcal.people.repository.write.WriteMappingRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -13,10 +14,15 @@ import java.util.List;
 public class MappingService{
 
   private final ReadMappingRepository readMappingRepository;
+  private final WriteMappingRepository writeMappingRepository;
 
-  public MappingService(ReadMappingRepository readMappingRepository) {
+  public MappingService(ReadMappingRepository readMappingRepository,
+      WriteMappingRepository writeMappingRepository) {
     this.readMappingRepository = readMappingRepository;
+    this.writeMappingRepository = writeMappingRepository;
   }
+
+  // ---------------------- READ METHODS ----------------------
 
   public List<TeamSkillDTO> getAllTeamsWithSkills(){
     List<String> teamIds = readMappingRepository.findAllTeamsWithSkills();
@@ -33,7 +39,7 @@ public class MappingService{
       }
 
       TeamSkillDTO dto = new TeamSkillDTO();
-      dto.setTeamName(teamId);
+      dto.setTeamName(teamId); // teamName is just the ID string
       dto.setSkills(skills);
 
       result.add(dto);
@@ -43,18 +49,14 @@ public class MappingService{
   }
 
   public List<PeopleDTO> getAllPeople(){
-
-    // Find all unique people IDs that have any mappings
     List<String> personIds = readMappingRepository
         .findByFromEntityTypeAndToEntityType("person","team").stream()
         .map(Mapping::getFromEntityId).distinct().toList();
 
-    // Include people mapped directly to skills
     List<String> personSkillIds = readMappingRepository
         .findByFromEntityTypeAndToEntityType("person","skill").stream()
         .map(Mapping::getFromEntityId).distinct().toList();
 
-    // Merge lists
     for (String id : personSkillIds){
       if (!personIds.contains(id)){
         personIds.add(id);
@@ -62,28 +64,23 @@ public class MappingService{
     }
 
     List<PeopleDTO> result = new ArrayList<>();
-
-    // Load all teams once to reuse
     List<TeamSkillDTO> allTeams = getAllTeamsWithSkills();
 
     for (String personId : personIds){
       PeopleDTO dto = new PeopleDTO();
       dto.setPersonId(personId);
 
-      // Teams
       List<Mapping> teamMappings = readMappingRepository
           .findByFromEntityIdAndFromEntityTypeAndToEntityType(personId,"person",
               "team");
 
       List<TeamSkillDTO> teams = new ArrayList<>();
       for (Mapping m : teamMappings){
-        // Find full TeamSkillDTO by teamName (formerly teamId)
         allTeams.stream().filter(t -> t.getTeamName().equals(m.getToEntityId()))
             .findFirst().ifPresent(teams::add);
       }
       dto.setTeams(teams);
 
-      // Individual skills
       List<Mapping> skillMappings = readMappingRepository
           .findByFromEntityIdAndFromEntityTypeAndToEntityType(personId,"person",
               "skill");
@@ -98,5 +95,78 @@ public class MappingService{
     }
 
     return result;
+  }
+
+  // ---------------------- WRITE METHODS ----------------------
+
+  public void addSkillToPerson(String personId,String skillName){
+    if (readMappingRepository
+        .findByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
+            personId,"PERSON",skillName,"SKILL")
+        .isEmpty()){
+
+      Mapping mapping = new Mapping();
+      mapping.setFromEntityId(personId);
+      mapping.setFromEntityType("PERSON");
+      mapping.setToEntityId(skillName);
+      mapping.setToEntityType("SKILL");
+
+      writeMappingRepository.save(mapping);
+    }
+  }
+
+  public void addSkillToTeam(String teamName,String skillName){
+    if (readMappingRepository
+        .findByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
+            teamName,"TEAM",skillName,"SKILL")
+        .isEmpty()){
+
+      Mapping mapping = new Mapping();
+      mapping.setFromEntityId(teamName);
+      mapping.setFromEntityType("TEAM");
+      mapping.setToEntityId(skillName);
+      mapping.setToEntityType("SKILL");
+
+      writeMappingRepository.save(mapping);
+    }
+  }
+
+  public void addTeamToPerson(String personId,String teamName){
+    if (readMappingRepository
+        .findByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
+            personId,"PERSON",teamName,"TEAM")
+        .isEmpty()){
+
+      Mapping mapping = new Mapping();
+      mapping.setFromEntityId(personId);
+      mapping.setFromEntityType("PERSON");
+      mapping.setToEntityId(teamName);
+      mapping.setToEntityType("TEAM");
+
+      writeMappingRepository.save(mapping);
+    }
+  }
+
+  // ---------- DELETE OPERATIONS ----------
+
+  // Delete a skill from a person
+  public void deleteSkillFromPerson(String personId,String skillName){
+    writeMappingRepository
+        .deleteByFromEntityTypeAndFromEntityIdAndToEntityTypeAndToEntityId(
+            "PERSON",personId,"SKILL",skillName);
+  }
+
+  // Delete a skill from a team
+  public void deleteSkillFromTeam(String teamName,String skillName){
+    writeMappingRepository
+        .deleteByFromEntityTypeAndFromEntityIdAndToEntityTypeAndToEntityId(
+            "TEAM",teamName,"SKILL",skillName);
+  }
+
+  // Delete a team from a person
+  public void deleteTeamFromPerson(String personId,String teamName){
+    writeMappingRepository
+        .deleteByFromEntityTypeAndFromEntityIdAndToEntityTypeAndToEntityId(
+            "PERSON",personId,"TEAM",teamName);
   }
 }

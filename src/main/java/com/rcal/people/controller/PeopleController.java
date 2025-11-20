@@ -77,4 +77,70 @@ public class PeopleController{
     return mappingService.getAllPeople();
   }
 
+  // ---------------------------------------------------------------------------
+  // Add a skill to a person
+  // ---------------------------------------------------------------------------
+  @Operation(summary = SKILL_PERSON_DESCRIPTION)
+  @PostMapping("/people/skills")
+  public ResponseEntity<String> addSkillToPerson(
+      @RequestParam String personName,@RequestParam String skillName){
+    mappingService.addSkillToPerson(personName,skillName);
+    return ResponseEntity.ok("Skill added to person successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Add a skill to a team
+  // ---------------------------------------------------------------------------
+  @Operation(summary = SKILL_TEAM_DESCRIPTION)
+  @PostMapping("/teams/skills")
+  public ResponseEntity<String> addSkillToTeam(@RequestParam String teamName,
+      @RequestParam String skillName){
+    mappingService.addSkillToTeam(teamName,skillName);
+    return ResponseEntity.ok("Skill added to team successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Add a team to a person
+  // ---------------------------------------------------------------------------
+  @Operation(summary = TEAM_PERSON_DESCRIPTION)
+  @PostMapping("/people/teams")
+  public ResponseEntity<String> addTeamToPerson(@RequestParam String personName,
+      @RequestParam String teamName){
+    mappingService.addTeamToPerson(personName,teamName);
+    return ResponseEntity.ok("Team added to person successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Deletes a skill from a person
+  // ---------------------------------------------------------------------------
+  @Operation(summary = SKILL_PERSON_DELETE_DESCRIPTION)
+  @DeleteMapping("/people/skills")
+  public ResponseEntity<String> deleteSkillFromPerson(
+      @RequestParam String personName,@RequestParam String skillName){
+    mappingService.deleteSkillFromPerson(personName,skillName);
+    return ResponseEntity.ok("Skill removed from person successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Deletes a skill from a team
+  // ---------------------------------------------------------------------------
+  @Operation(summary = SKILL_TEAM_DELETE_DESCRIPTION)
+  @DeleteMapping("/teams/skills")
+  public ResponseEntity<String> deleteSkillFromTeam(
+      @RequestParam String teamName,@RequestParam String skillName){
+    mappingService.deleteSkillFromTeam(teamName,skillName);
+    return ResponseEntity.ok("Skill removed from team successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Deletes a team from a person
+  // ---------------------------------------------------------------------------
+  @Operation(summary = TEAM_PERSON_DELETE_DESCRIPTION)
+  @DeleteMapping("/people/teams")
+  public ResponseEntity<String> deleteTeamFromPerson(
+      @RequestParam String personName,@RequestParam String teamName){
+    mappingService.deleteTeamFromPerson(personName,teamName);
+    return ResponseEntity.ok("Team removed from person successfully");
+  }
+
 }

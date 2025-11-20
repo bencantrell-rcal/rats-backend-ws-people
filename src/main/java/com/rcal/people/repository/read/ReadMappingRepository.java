@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ReadMappingRepository extends JpaRepository<Mapping, Long>{
 
@@ -21,4 +22,8 @@ public interface ReadMappingRepository extends JpaRepository<Mapping, Long>{
         AND m.toEntityType = 'SKILL'
       """)
   List<String> findAllTeamsWithSkills();
+
+  Optional<Mapping> findByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
+      String fromEntityId,String fromEntityType,String toEntityId,
+      String toEntityType);
 }
