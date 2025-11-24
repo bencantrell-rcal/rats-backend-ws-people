@@ -1,11 +1,12 @@
 package com.rcal.people.model;
 
 import lombok.Data;
+
 import java.util.List;
 
 @Data
-public class PeopleDTO{
-  private String personId;
+public class RoleDTO{
+  private String roleId;
   private List<String> skills;
-  private List<String> roles;
+  private List<String> teams;
 }

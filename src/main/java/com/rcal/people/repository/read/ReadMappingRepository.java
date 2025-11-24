@@ -26,4 +26,8 @@ public interface ReadMappingRepository extends JpaRepository<Mapping, Long>{
   Optional<Mapping> findByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
       String fromEntityId,String fromEntityType,String toEntityId,
       String toEntityType);
+
+  List<Mapping> findByToEntityType(String toEntityType);
+
+  List<Mapping> findByFromEntityType(String fromEntityType);
 }

@@ -2,6 +2,7 @@ package com.rcal.people.controller;
 
 import com.rcal.people.entity.Employee;
 import com.rcal.people.model.PeopleDTO;
+import com.rcal.people.model.RoleDTO;
 import com.rcal.people.model.TeamSkillDTO;
 import com.rcal.people.service.EmployeeService;
 import com.rcal.people.service.GithubContentService;
@@ -73,7 +74,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Get all people and associated teams and skills
+  // Purpose: Get all people with roles and skills
   // ---------------------------------------------------------------------------
   @Operation(summary = PEOPLE_DESCRIPTION)
   @GetMapping("/people")
@@ -86,10 +87,23 @@ public class PeopleController{
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_PERSON_DESCRIPTION)
   @PostMapping("/people/skills")
-  public ResponseEntity<String> addSkillToPerson(
-      @RequestParam String personName,@RequestParam String skillName){
-    mappingService.addSkillToPerson(personName,skillName);
+  public ResponseEntity<String> addSkillToPerson(@RequestParam String personId,
+      @RequestParam String skillName){
+
+    mappingService.addSkillToPerson(personId,skillName);
     return ResponseEntity.ok("Skill added to person successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Add a role to a person
+  // ---------------------------------------------------------------------------
+  @Operation(summary = ROLE_PERSON_DESCRIPTION)
+  @PostMapping("/people/roles")
+  public ResponseEntity<String> addRoleToPerson(@RequestParam String personId,
+      @RequestParam String roleId){
+
+    mappingService.addRoleToPerson(personId,roleId);
+    return ResponseEntity.ok("Role added to person successfully");
   }
 
   // ---------------------------------------------------------------------------
@@ -97,54 +111,113 @@ public class PeopleController{
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_TEAM_DESCRIPTION)
   @PostMapping("/teams/skills")
-  public ResponseEntity<String> addSkillToTeam(@RequestParam String teamName,
+  public ResponseEntity<String> addSkillToTeam(@RequestParam String teamId,
       @RequestParam String skillName){
-    mappingService.addSkillToTeam(teamName,skillName);
+
+    mappingService.addSkillToTeam(teamId,skillName);
     return ResponseEntity.ok("Skill added to team successfully");
   }
 
   // ---------------------------------------------------------------------------
-  // Add a team to a person
+  // Add a team to a role
   // ---------------------------------------------------------------------------
-  @Operation(summary = TEAM_PERSON_DESCRIPTION)
-  @PostMapping("/people/teams")
-  public ResponseEntity<String> addTeamToPerson(@RequestParam String personName,
-      @RequestParam String teamName){
-    mappingService.addTeamToPerson(personName,teamName);
-    return ResponseEntity.ok("Team added to person successfully");
+  @Operation(summary = TEAM_ROLE_DESCRIPTION)
+  @PostMapping("/roles/teams")
+  public ResponseEntity<String> addTeamToRole(@RequestParam String roleId,
+      @RequestParam String teamId){
+
+    mappingService.addTeamToRole(roleId,teamId);
+    return ResponseEntity.ok("Team added to role successfully");
   }
 
   // ---------------------------------------------------------------------------
-  // Deletes a skill from a person
+  // Add a skill to a role
+  // ---------------------------------------------------------------------------
+  @Operation(summary = SKILL_ROLE_DESCRIPTION)
+  @PostMapping("/roles/skills")
+  public ResponseEntity<String> addSkillToRole(@RequestParam String roleId,
+      @RequestParam String skillId){
+
+    mappingService.addSkillToRole(roleId,skillId);
+    return ResponseEntity.ok("Skill added to role successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Delete a skill from a person
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_PERSON_DELETE_DESCRIPTION)
   @DeleteMapping("/people/skills")
   public ResponseEntity<String> deleteSkillFromPerson(
-      @RequestParam String personName,@RequestParam String skillName){
-    mappingService.deleteSkillFromPerson(personName,skillName);
+      @RequestParam String personId,@RequestParam String skillName){
+
+    mappingService.deleteSkillFromPerson(personId,skillName);
     return ResponseEntity.ok("Skill removed from person successfully");
   }
 
   // ---------------------------------------------------------------------------
-  // Deletes a skill from a team
+  // Delete a role from a person
+  // ---------------------------------------------------------------------------
+  @Operation(summary = ROLE_PERSON_DELETE_DESCRIPTION)
+  @DeleteMapping("/people/roles")
+  public ResponseEntity<String> deleteRoleFromPerson(
+      @RequestParam String personId,@RequestParam String roleId){
+
+    mappingService.deleteRoleFromPerson(personId,roleId);
+    return ResponseEntity.ok("Role removed from person successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Delete a skill from a team
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_TEAM_DELETE_DESCRIPTION)
   @DeleteMapping("/teams/skills")
-  public ResponseEntity<String> deleteSkillFromTeam(
-      @RequestParam String teamName,@RequestParam String skillName){
-    mappingService.deleteSkillFromTeam(teamName,skillName);
+  public ResponseEntity<String> deleteSkillFromTeam(@RequestParam String teamId,
+      @RequestParam String skillName){
+
+    mappingService.deleteSkillFromTeam(teamId,skillName);
     return ResponseEntity.ok("Skill removed from team successfully");
   }
 
   // ---------------------------------------------------------------------------
-  // Deletes a team from a person
+  // Delete a team from a role
   // ---------------------------------------------------------------------------
-  @Operation(summary = TEAM_PERSON_DELETE_DESCRIPTION)
-  @DeleteMapping("/people/teams")
-  public ResponseEntity<String> deleteTeamFromPerson(
-      @RequestParam String personName,@RequestParam String teamName){
-    mappingService.deleteTeamFromPerson(personName,teamName);
-    return ResponseEntity.ok("Team removed from person successfully");
+  @Operation(summary = TEAM_ROLE_DELETE_DESCRIPTION)
+  @DeleteMapping("/roles/teams")
+  public ResponseEntity<String> deleteTeamFromRole(@RequestParam String roleId,
+      @RequestParam String teamId){
+
+    mappingService.deleteTeamFromRole(roleId,teamId);
+    return ResponseEntity.ok("Team removed from role successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Delete a skill from a role
+  // ---------------------------------------------------------------------------
+  @Operation(summary = SKILL_ROLE_DELETE_DESCRIPTION)
+  @DeleteMapping("/roles/skills")
+  public ResponseEntity<String> deleteSkillFromRole(@RequestParam String roleId,
+      @RequestParam String skillId){
+
+    mappingService.deleteSkillFromRole(roleId,skillId);
+    return ResponseEntity.ok("Skill removed from role successfully");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Get all roles with associated teams and skills
+  // ---------------------------------------------------------------------------
+  @Operation(summary = ROLES_DESCRIPTION)
+  @GetMapping("/roles")
+  public List<RoleDTO> getAllRoles(){
+    return mappingService.getAllRoles();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Get all skills
+  // ---------------------------------------------------------------------------
+  @Operation(summary = SKILLS_DESCRIPTION)
+  @GetMapping("/skills")
+  public List<String> getAllSkills(){
+    return mappingService.getAllSkills();
   }
 
   @GetMapping("/docs/content")
