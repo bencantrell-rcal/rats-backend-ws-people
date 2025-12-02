@@ -25,26 +25,31 @@ public class MappingService{
 
   // ---------------------- READ METHODS ----------------------
 
-  /**
-   * Returns all teams with their skills.
-   */
   public List<TeamSkillDTO> getAllTeamsWithSkills(){
     List<String> teamIds = readMappingRepository.findAllTeamsWithSkills();
     List<TeamSkillDTO> result = new ArrayList<>();
 
     for (String teamId : teamIds){
+
       List<Mapping> skillMappings = readMappingRepository
           .findByFromEntityIdAndFromEntityTypeAndToEntityType(teamId,"TEAM",
               "SKILL");
 
-      List<String> skills = new ArrayList<>();
-      for (Mapping m : skillMappings){
-        skills.add(m.getToEntityId());
-      }
+      List<String> skills = skillMappings.stream().map(Mapping::getToEntityId)
+          .toList();
+
+      List<Mapping> descriptionMappings = readMappingRepository
+          .findByFromEntityIdAndFromEntityTypeAndToEntityType(teamId,"TEAM",
+              "DESCRIPTION");
+
+      String description = descriptionMappings.isEmpty()
+          ? null
+          : descriptionMappings.get(0).getToEntityId();
 
       TeamSkillDTO dto = new TeamSkillDTO();
       dto.setTeamName(teamId);
       dto.setSkills(skills);
+      dto.setDescription(description);
 
       result.add(dto);
     }
@@ -244,23 +249,71 @@ public class MappingService{
       RoleDTO dto = new RoleDTO();
       dto.setRoleId(roleId);
 
-      // Teams for this role
+      // --- Teams for this role ---
       List<String> teams = readMappingRepository
           .findByFromEntityIdAndFromEntityTypeAndToEntityType(roleId,"ROLE",
               "TEAM")
           .stream().map(Mapping::getToEntityId).toList();
       dto.setTeams(teams);
 
-      // Skills for this role
+      // --- Skills for this role ---
       List<String> skills = readMappingRepository
           .findByFromEntityIdAndFromEntityTypeAndToEntityType(roleId,"ROLE",
               "SKILL")
           .stream().map(Mapping::getToEntityId).toList();
       dto.setSkills(skills);
 
+      // --- Description for this role ---
+      List<Mapping> descMappings = readMappingRepository
+          .findByFromEntityIdAndFromEntityTypeAndToEntityType(roleId,"ROLE",
+              "DESCRIPTION");
+
+      String description = descMappings.isEmpty()
+          ? null
+          : descMappings.get(0).getToEntityId();
+
+      dto.setDescription(description);
+
       result.add(dto);
     }
 
     return result;
+  }
+
+  public void addDescriptionToTeam(String teamId,String description){
+    // delete any existing description if you want single-description behavior:
+    writeMappingRepository.deleteByFromEntityTypeAndFromEntityIdAndToEntityType(
+        "TEAM",teamId,"DESCRIPTION");
+
+    Mapping mapping = new Mapping();
+    mapping.setFromEntityId(teamId);
+    mapping.setFromEntityType("TEAM");
+    mapping.setToEntityId(description);
+    mapping.setToEntityType("DESCRIPTION");
+
+    writeMappingRepository.save(mapping);
+  }
+
+  public void addDescriptionToRole(String roleId,String description){
+    writeMappingRepository.deleteByFromEntityTypeAndFromEntityIdAndToEntityType(
+        "ROLE",roleId,"DESCRIPTION");
+
+    Mapping mapping = new Mapping();
+    mapping.setFromEntityId(roleId);
+    mapping.setFromEntityType("ROLE");
+    mapping.setToEntityId(description);
+    mapping.setToEntityType("DESCRIPTION");
+
+    writeMappingRepository.save(mapping);
+  }
+
+  public void deleteDescriptionFromTeam(String teamId){
+    writeMappingRepository.deleteByFromEntityTypeAndFromEntityIdAndToEntityType(
+        "TEAM",teamId,"DESCRIPTION");
+  }
+
+  public void deleteDescriptionFromRole(String roleId){
+    writeMappingRepository.deleteByFromEntityTypeAndFromEntityIdAndToEntityType(
+        "ROLE",roleId,"DESCRIPTION");
   }
 }

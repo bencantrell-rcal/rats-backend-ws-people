@@ -18,4 +18,8 @@ public class OpenApiDescriptionConfiguration{
   public static final String SKILL_ROLE_DELETE_DESCRIPTION = "Deletes a skill from a role";
   public static final String ROLES_DESCRIPTION = "Gets all roles";
   public static final String SKILLS_DESCRIPTION = "Gets all skills";
+  public static final String TEAMS_DESCRIPTIONS_DESCRIPTION = "Adds a description to a team";
+  public static final String ROLES_DESCRIPTIONS_DESCRIPTION = "Adds a description to a role";
+  public static final String TEAMS_DESCRIPTIONS_DELETE_DESCRIPTION = "Deletes a description from a team";
+  public static final String ROLES_DESCRIPTIONS_DELETE_DESCRIPTION = "Deletes a description from a role";
 }

@@ -65,7 +65,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Get all teams and associated skills
+  // Purpose: Gets all teams and associated skills
   // ---------------------------------------------------------------------------
   @Operation(summary = TEAMS_DESCRIPTION)
   @GetMapping("/teams")
@@ -74,7 +74,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Get all people with roles and skills
+  // Purpose: Gets all people with roles and skills
   // ---------------------------------------------------------------------------
   @Operation(summary = PEOPLE_DESCRIPTION)
   @GetMapping("/people")
@@ -83,7 +83,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Add a skill to a person
+  // Adds a skill to a person
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_PERSON_DESCRIPTION)
   @PostMapping("/people/skills")
@@ -95,7 +95,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Add a role to a person
+  // Adds a role to a person
   // ---------------------------------------------------------------------------
   @Operation(summary = ROLE_PERSON_DESCRIPTION)
   @PostMapping("/people/roles")
@@ -107,7 +107,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Add a skill to a team
+  // Adds a skill to a team
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_TEAM_DESCRIPTION)
   @PostMapping("/teams/skills")
@@ -119,7 +119,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Add a team to a role
+  // Adds a team to a role
   // ---------------------------------------------------------------------------
   @Operation(summary = TEAM_ROLE_DESCRIPTION)
   @PostMapping("/roles/teams")
@@ -131,7 +131,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Add a skill to a role
+  // Adds a skill to a role
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_ROLE_DESCRIPTION)
   @PostMapping("/roles/skills")
@@ -143,7 +143,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Delete a skill from a person
+  // Deletes a skill from a person
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_PERSON_DELETE_DESCRIPTION)
   @DeleteMapping("/people/skills")
@@ -155,7 +155,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Delete a role from a person
+  // Deletes a role from a person
   // ---------------------------------------------------------------------------
   @Operation(summary = ROLE_PERSON_DELETE_DESCRIPTION)
   @DeleteMapping("/people/roles")
@@ -167,7 +167,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Delete a skill from a team
+  // Deletes a skill from a team
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_TEAM_DELETE_DESCRIPTION)
   @DeleteMapping("/teams/skills")
@@ -179,7 +179,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Delete a team from a role
+  // Deletes a team from a role
   // ---------------------------------------------------------------------------
   @Operation(summary = TEAM_ROLE_DELETE_DESCRIPTION)
   @DeleteMapping("/roles/teams")
@@ -191,7 +191,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Delete a skill from a role
+  // Deletes a skill from a role
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILL_ROLE_DELETE_DESCRIPTION)
   @DeleteMapping("/roles/skills")
@@ -203,7 +203,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Get all roles with associated teams and skills
+  // Purpose: Gets all roles with associated teams and skills
   // ---------------------------------------------------------------------------
   @Operation(summary = ROLES_DESCRIPTION)
   @GetMapping("/roles")
@@ -212,12 +212,58 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Get all skills
+  // Purpose: Gets all skills
   // ---------------------------------------------------------------------------
   @Operation(summary = SKILLS_DESCRIPTION)
   @GetMapping("/skills")
   public List<String> getAllSkills(){
     return mappingService.getAllSkills();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Adds a description to a team
+  // ---------------------------------------------------------------------------
+  @Operation(summary = TEAMS_DESCRIPTIONS_DESCRIPTION)
+  @PostMapping("/teams/descriptions")
+  public ResponseEntity<String> addTeamDescription(@RequestParam String teamId,
+      @RequestParam String description){
+
+    mappingService.addDescriptionToTeam(teamId,description);
+    return ResponseEntity.ok("Description added to team");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Adds a description to a role
+  // ---------------------------------------------------------------------------
+  @Operation(summary = ROLES_DESCRIPTIONS_DESCRIPTION)
+  @PostMapping("/roles/descriptions")
+  public ResponseEntity<String> addRoleDescription(@RequestParam String roleId,
+      @RequestParam String description){
+
+    mappingService.addDescriptionToRole(roleId,description);
+    return ResponseEntity.ok("Description added to role");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Delete a description from a team
+  // ---------------------------------------------------------------------------
+  @Operation(summary = TEAMS_DESCRIPTIONS_DELETE_DESCRIPTION)
+  @DeleteMapping("/teams/descriptions")
+  public ResponseEntity<String> deleteTeamDescription(
+      @RequestParam String teamId){
+    mappingService.deleteDescriptionFromTeam(teamId);
+    return ResponseEntity.ok("Description removed from team: " + teamId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Deletes a description from a role
+  // ---------------------------------------------------------------------------
+  @Operation(summary = ROLES_DESCRIPTIONS_DELETE_DESCRIPTION)
+  @DeleteMapping("/roles/descriptions")
+  public ResponseEntity<String> deleteRoleDescription(
+      @RequestParam String roleId){
+    mappingService.deleteDescriptionFromRole(roleId);
+    return ResponseEntity.ok("Description removed from role: " + roleId);
   }
 
   @GetMapping("/docs/content")
