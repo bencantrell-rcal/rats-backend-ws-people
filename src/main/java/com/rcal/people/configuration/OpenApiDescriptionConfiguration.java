@@ -22,4 +22,8 @@ public class OpenApiDescriptionConfiguration{
   public static final String ROLES_DESCRIPTIONS_DESCRIPTION = "Adds a description to a role";
   public static final String TEAMS_DESCRIPTIONS_DELETE_DESCRIPTION = "Deletes a description from a team";
   public static final String ROLES_DESCRIPTIONS_DELETE_DESCRIPTION = "Deletes a description from a role";
+  public static final String PERMISSIONS_DELETE_DESCRIPTION = "Deletes a permission from an employee";
+  public static final String PERMISSIONS_ADD_DESCRIPTION = "Adds a permission to an employee";
+  public static final String PERMISSIONS_GET_UNIQUE_DESCRIPTION = "Returns all unique permission names";
+  public static final String PERMISSIONS_GET_DESCRIPTION = "Returns all active employees and their permissions";
 }

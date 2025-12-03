@@ -10,6 +10,20 @@ This application:
 - Deploys to a GKE Autopilot cluster using Cloud Build and Artifact Registry.
 - Connects to a Cloud SQL MySQL instance (with optional local DB setup).
 
+## People Mappings Overview
+
+Entities in the DB are mapped in simple entity:entity pairs that can mean different things depending on their type
+
+- PERSON _belongs to_ ROLE
+- ROLE _belongs to_ TEAM
+
+- TEAM _has a_ SKILL
+- ROLE _has a_ SKILL
+- PERSON _has a_ SKILL
+
+- TEAM _is defined as_ DESCRIPTION
+- ROLE _is defined as_ DESCRIPTION
+
 ## Current Known Issues
 
 - 

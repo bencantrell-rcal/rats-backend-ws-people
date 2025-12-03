@@ -1,9 +1,12 @@
 package com.rcal.people.controller;
 
 import com.rcal.people.entity.Employee;
+import com.rcal.people.entity.EmployeePermission;
+import com.rcal.people.model.EmployeePermissionsDTO;
 import com.rcal.people.model.PeopleDTO;
 import com.rcal.people.model.RoleDTO;
 import com.rcal.people.model.TeamSkillDTO;
+import com.rcal.people.service.EmployeePermissionService;
 import com.rcal.people.service.EmployeeService;
 import com.rcal.people.service.GithubContentService;
 import com.rcal.people.service.MappingService;
@@ -26,13 +29,15 @@ public class PeopleController{
   private final EmployeeService employeeService;
   private final MappingService mappingService;
   private final GithubContentService githubContentService;
+  private final EmployeePermissionService employeePermissionService;
 
   public PeopleController(EmployeeService employeeService,
-      MappingService mappingService,
-      GithubContentService githubContentService) {
+      MappingService mappingService, GithubContentService githubContentService,
+      EmployeePermissionService employeePermissionService) {
     this.employeeService = employeeService;
     this.mappingService = mappingService;
     this.githubContentService = githubContentService;
+    this.employeePermissionService = employeePermissionService;
   }
 
   // ---------------------------------------------------------------------------
@@ -270,6 +275,60 @@ public class PeopleController{
   public ResponseEntity<String> getMarkdownFile(@RequestParam String fileName){
     return ResponseEntity
         .ok(githubContentService.fetchPublicMarkdown(fileName));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Adds a permission to an employee
+  // ---------------------------------------------------------------------------
+  @Operation(summary = PERMISSIONS_ADD_DESCRIPTION)
+  @PostMapping("/permissions")
+  public ResponseEntity<String> addPermission(@RequestParam Integer employeeId,
+      @RequestParam String permission,
+      @RequestParam(required = false) String permissionClass){
+    EmployeePermission ep = employeePermissionService.addPermission(employeeId,
+        permission,permissionClass);
+    return ResponseEntity.ok("Permission added: " + ep.getPermission()
+        + " to employee ID: " + employeeId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Deletes a permission from an employee
+  // ---------------------------------------------------------------------------
+  @Operation(summary = PERMISSIONS_DELETE_DESCRIPTION)
+  @DeleteMapping("/permissions")
+  public ResponseEntity<String> deletePermission(
+      @RequestParam Integer employeeId,@RequestParam String permission){
+    boolean deleted = employeePermissionService.deletePermission(employeeId,
+        permission);
+    if (deleted){
+      return ResponseEntity.ok("Permission removed: " + permission
+          + " from employee ID: " + employeeId);
+    } else{
+      return ResponseEntity.badRequest()
+          .body("Permission not found for employee ID: " + employeeId);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Returns all unique permission names
+  // ---------------------------------------------------------------------------
+  @Operation(summary = PERMISSIONS_GET_UNIQUE_DESCRIPTION)
+  @GetMapping("/permissions")
+  public ResponseEntity<List<String>> getAllUniquePermissions(){
+    List<String> permissions = employeePermissionService
+        .getAllUniquePermissions();
+    return ResponseEntity.ok(permissions);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Returns all active employees and their permissions
+  // ---------------------------------------------------------------------------
+  @Operation(summary = PERMISSIONS_GET_DESCRIPTION)
+  @GetMapping("/employees/permissions")
+  public ResponseEntity<List<EmployeePermissionsDTO>> getAllActiveEmployeesWithPermissions(){
+    List<EmployeePermissionsDTO> employeesWithPermissions = employeePermissionService
+        .getAllActiveEmployeesWithPermissions();
+    return ResponseEntity.ok(employeesWithPermissions);
   }
 
 }
