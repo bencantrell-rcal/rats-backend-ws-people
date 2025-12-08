@@ -26,4 +26,9 @@ public class OpenApiDescriptionConfiguration{
   public static final String PERMISSIONS_ADD_DESCRIPTION = "Adds a permission to an employee";
   public static final String PERMISSIONS_GET_UNIQUE_DESCRIPTION = "Returns all unique permission names";
   public static final String PERMISSIONS_GET_DESCRIPTION = "Returns all active employees and their permissions";
+  public static final String HOURS_DESCRIPTION = "Returns all preferred time blocks for an employee";
+  public static final String HOURS_ADD_DESCRIPTION = "Adds a preferred time block for an employee";
+  public static final String HOURS_DELETE_DESCRIPTION = "Deletes a preferred time block for an employee";
+  public static final String HOURS_ALL_DESCRIPTION = "Returns all active employees with their preferred hours";
+
 }

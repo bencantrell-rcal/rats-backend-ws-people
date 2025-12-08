@@ -2,14 +2,9 @@ package com.rcal.people.controller;
 
 import com.rcal.people.entity.Employee;
 import com.rcal.people.entity.EmployeePermission;
-import com.rcal.people.model.EmployeePermissionsDTO;
-import com.rcal.people.model.PeopleDTO;
-import com.rcal.people.model.RoleDTO;
-import com.rcal.people.model.TeamSkillDTO;
-import com.rcal.people.service.EmployeePermissionService;
-import com.rcal.people.service.EmployeeService;
-import com.rcal.people.service.GithubContentService;
-import com.rcal.people.service.MappingService;
+import com.rcal.people.entity.EmployeesPreferredHours;
+import com.rcal.people.model.*;
+import com.rcal.people.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,14 +25,17 @@ public class PeopleController{
   private final MappingService mappingService;
   private final GithubContentService githubContentService;
   private final EmployeePermissionService employeePermissionService;
+  private final EmployeesPreferredHoursService employeesPreferredHoursService;
 
   public PeopleController(EmployeeService employeeService,
       MappingService mappingService, GithubContentService githubContentService,
-      EmployeePermissionService employeePermissionService) {
+      EmployeePermissionService employeePermissionService,
+      EmployeesPreferredHoursService employeesPreferredHoursService) {
     this.employeeService = employeeService;
     this.mappingService = mappingService;
     this.githubContentService = githubContentService;
     this.employeePermissionService = employeePermissionService;
+    this.employeesPreferredHoursService = employeesPreferredHoursService;
   }
 
   // ---------------------------------------------------------------------------
@@ -331,4 +329,58 @@ public class PeopleController{
     return ResponseEntity.ok(employeesWithPermissions);
   }
 
+  // ---------------------------------------------------------------------------
+  // Purpose: Get all preferred time blocks for an employee
+  // ---------------------------------------------------------------------------
+  @Operation(summary = HOURS_DESCRIPTION)
+  @GetMapping("/employees/{employeeId}/hours")
+  public ResponseEntity<EmployeesPreferredHoursDTO> getPreferredHours(
+      @PathVariable Long employeeId){
+
+    EmployeesPreferredHoursDTO dto = employeesPreferredHoursService
+        .getPreferredHoursWithName(employeeId);
+
+    return ResponseEntity.ok(dto);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Add a preferred time block for an employee
+  // ---------------------------------------------------------------------------
+  @Operation(summary = HOURS_ADD_DESCRIPTION)
+  @PostMapping("/employees/{employeeId}/hours")
+  public ResponseEntity<EmployeesPreferredHours> addPreferredHours(
+      @PathVariable Long employeeId,@RequestParam String dayOfWeek,
+      @RequestParam String startTime,@RequestParam String endTime){
+
+    EmployeesPreferredHours created = employeesPreferredHoursService
+        .addPreferredHours(employeeId,dayOfWeek,startTime,endTime);
+
+    return ResponseEntity.ok(created);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Delete a preferred time block for an employee
+  // ---------------------------------------------------------------------------
+  @Operation(summary = HOURS_DELETE_DESCRIPTION)
+  @DeleteMapping("/employees/{employeeId}/hours/{blockId}")
+  public ResponseEntity<String> deletePreferredHours(
+      @PathVariable Long employeeId,@PathVariable Long blockId){
+
+    employeesPreferredHoursService.deletePreferredHours(employeeId,blockId);
+
+    return ResponseEntity.ok("Preferred hours block deleted");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Returns all active employees with their preferred time blocks
+  // ---------------------------------------------------------------------------
+  @Operation(summary = HOURS_ALL_DESCRIPTION)
+  @GetMapping("/hours")
+  public ResponseEntity<List<EmployeesPreferredHoursDTO>> getAllActiveEmployeesWithPreferredHours(){
+
+    List<EmployeesPreferredHoursDTO> result = employeesPreferredHoursService
+        .getAllActiveEmployeesWithPreferredHours();
+
+    return ResponseEntity.ok(result);
+  }
 }
