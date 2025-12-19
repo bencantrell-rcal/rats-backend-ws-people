@@ -30,5 +30,6 @@ public class OpenApiDescriptionConfiguration{
   public static final String HOURS_ADD_DESCRIPTION = "Adds a preferred time block for an employee";
   public static final String HOURS_DELETE_DESCRIPTION = "Deletes a preferred time block for an employee";
   public static final String HOURS_ALL_DESCRIPTION = "Returns all active employees with their preferred hours";
+  public static final String PERMISSIONS_DESCRIPTION = "Validates user session based on SESSION_ID cookie, deletes expired sessions from the user_session table, returns list of user permissions.";
 
 }
