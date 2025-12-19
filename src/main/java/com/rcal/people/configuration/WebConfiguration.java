@@ -30,6 +30,8 @@ public class WebConfiguration implements WebMvcConfigurer{
   static final String HTTPS_PROD_SCHEDULER_DOMAIN = "https://scheduler.rcal.internal";
   static final String HTTPS_PROD_LOGIN_DOMAIN = "https://login.rcal.internal";
   static final String HTTPS_PROD_API_DOMAIN = "https://api.rcal.internal";
+  static final String HTTPS_TEST_PEOPLE_DOMAIN = "https://people.rcal.internal";
+  static final String HTTPS_PROD_PEOPLE_DOMAIN = "https://people.test.rcal.internal";
 
   // ---------------------------------------------------------------------------
   // Purpose: Approve http request origins to prevent CORS errors in the
@@ -37,16 +39,15 @@ public class WebConfiguration implements WebMvcConfigurer{
   // ---------------------------------------------------------------------------
   @Override
   public void addCorsMappings(CorsRegistry registry){
-    registry.addMapping("/**")
-        .allowedOrigins(PROD_FRONTEND_WEB_ADDRESS,TEST_FRONTEND_WEB_ADDRESS,
-            LOCAL_FRONTEND_WEB_ADDRESS,TEST_SCHEDULER_DOMAIN,TEST_LOGIN_DOMAIN,
-            PROD_SCHEDULER_DOMAIN,PROD_LOGIN_DOMAIN,NEW_TEST_SCHEDULER_DOMAIN,
-            NEW_TEST_LOGIN_DOMAIN,NEW_PROD_SCHEDULER_DOMAIN,
-            NEW_PROD_LOGIN_DOMAIN,TEST_INGRESS_CONTROLLER,
-            PROD_INGRESS_CONTROLLER,HTTPS_TEST_SCHEDULER_DOMAIN,
-            HTTPS_TEST_LOGIN_DOMAIN,HTTPS_TEST_API_DOMAIN,
-            HTTPS_PROD_SCHEDULER_DOMAIN,HTTPS_PROD_LOGIN_DOMAIN,
-            HTTPS_PROD_API_DOMAIN)
+    registry.addMapping("/**").allowedOrigins(PROD_FRONTEND_WEB_ADDRESS,
+        TEST_FRONTEND_WEB_ADDRESS,LOCAL_FRONTEND_WEB_ADDRESS,
+        TEST_SCHEDULER_DOMAIN,TEST_LOGIN_DOMAIN,PROD_SCHEDULER_DOMAIN,
+        PROD_LOGIN_DOMAIN,NEW_TEST_SCHEDULER_DOMAIN,NEW_TEST_LOGIN_DOMAIN,
+        NEW_PROD_SCHEDULER_DOMAIN,NEW_PROD_LOGIN_DOMAIN,TEST_INGRESS_CONTROLLER,
+        PROD_INGRESS_CONTROLLER,HTTPS_TEST_SCHEDULER_DOMAIN,
+        HTTPS_TEST_LOGIN_DOMAIN,HTTPS_TEST_API_DOMAIN,
+        HTTPS_PROD_SCHEDULER_DOMAIN,HTTPS_PROD_LOGIN_DOMAIN,
+        HTTPS_PROD_API_DOMAIN,HTTPS_PROD_PEOPLE_DOMAIN,HTTPS_TEST_PEOPLE_DOMAIN)
         .allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
         .allowedHeaders("*").allowCredentials(true);
   }
