@@ -27,18 +27,28 @@ public class PeopleController{
   private final EmployeePermissionService employeePermissionService;
   private final EmployeesPreferredHoursService employeesPreferredHoursService;
   private final EmployeeLoginService employeeLoginService;
+  private final PersonService personService;
+  private final TeamService teamService;
+  private final RoleService roleService;
+  private final SkillService skillService;
 
   public PeopleController(EmployeeService employeeService,
       MappingService mappingService, GithubContentService githubContentService,
       EmployeePermissionService employeePermissionService,
       EmployeesPreferredHoursService employeesPreferredHoursService,
-      EmployeeLoginService employeeLoginService) {
+      EmployeeLoginService employeeLoginService, PersonService personService,
+      TeamService teamService, RoleService roleService,
+      SkillService skillService) {
     this.employeeService = employeeService;
     this.mappingService = mappingService;
     this.githubContentService = githubContentService;
     this.employeePermissionService = employeePermissionService;
     this.employeesPreferredHoursService = employeesPreferredHoursService;
     this.employeeLoginService = employeeLoginService;
+    this.personService = personService;
+    this.teamService = teamService;
+    this.roleService = roleService;
+    this.skillService = skillService;
   }
 
   // ===========================================================================
@@ -66,83 +76,54 @@ public class PeopleController{
   }
 
   // ===========================================================================
-  // EMPLOYEES
-  // ===========================================================================
-
-  // ---------------------------------------------------------------------------
-  // Purpose: Gets all employees and RATS employee data
-  // ---------------------------------------------------------------------------
-  @Tag(name = "employees")
-  @Operation(summary = EMPLOYEES_DESCRIPTION)
-  @GetMapping("/employees")
-  public List<Employee> getAllEmployees(){
-    return employeeService.getAllEmployees();
-  }
-
-  // ===========================================================================
   // PEOPLE (ROLES & SKILLS)
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Gets all people with roles and skills
+  // Purpose: Returns all people
   // ---------------------------------------------------------------------------
   @Tag(name = "people")
-  @Operation(summary = PEOPLE_DESCRIPTION)
-  @GetMapping("/people")
-  public List<PeopleDTO> getAllPeople(){
-    return mappingService.getAllPeople();
+  @Operation(summary = "Returns all people")
+  @GetMapping("people")
+  public ResponseEntity<List<Person>> getAllPeople(){
+    List<Person> people = personService.getAllPeople();
+    return ResponseEntity.ok(people);
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Adds a skill to a person
+  // Purpose: Returns a specific person by ID
   // ---------------------------------------------------------------------------
   @Tag(name = "people")
-  @Operation(summary = SKILL_PERSON_DESCRIPTION)
-  @PostMapping("/people/skills")
-  public ResponseEntity<String> addSkillToPerson(@RequestParam String personId,
-      @RequestParam String skillName){
+  @Operation(summary = "Returns a person by ID")
+  @GetMapping("people/{personId}")
+  public ResponseEntity<Person> getPersonById(@PathVariable Integer personId){
 
-    mappingService.addSkillToPerson(personId,skillName);
-    return ResponseEntity.ok("Skill added to person successfully");
+    return personService.getPersonByIdOptional(personId).map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Deletes a skill from a person
+  // Purpose: Creates a new person
   // ---------------------------------------------------------------------------
   @Tag(name = "people")
-  @Operation(summary = SKILL_PERSON_DELETE_DESCRIPTION)
-  @DeleteMapping("/people/skills")
-  public ResponseEntity<String> deleteSkillFromPerson(
-      @RequestParam String personId,@RequestParam String skillName){
+  @Operation(summary = "Creates a new person")
+  @PostMapping("/people")
+  public ResponseEntity<Person> createPerson(@RequestBody String name){
 
-    mappingService.deleteSkillFromPerson(personId,skillName);
-    return ResponseEntity.ok("Skill removed from person successfully");
+    Person createdPerson = personService.createPerson(name);
+    return ResponseEntity.ok(createdPerson);
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Adds a role to a person
+  // Purpose: Deletes a person by ID
   // ---------------------------------------------------------------------------
   @Tag(name = "people")
-  @Operation(summary = ROLE_PERSON_DESCRIPTION)
-  @PostMapping("/people/roles")
-  public ResponseEntity<String> addRoleToPerson(@RequestParam String personId,
-      @RequestParam String roleId){
+  @Operation(summary = "Deletes a person by ID")
+  @DeleteMapping("/people/{personId}")
+  public ResponseEntity<Void> deletePerson(@PathVariable Integer personId){
 
-    mappingService.addRoleToPerson(personId,roleId);
-    return ResponseEntity.ok("Role added to person successfully");
-  }
-
-  // ---------------------------------------------------------------------------
-  // Purpose: Deletes a role from a person
-  // ---------------------------------------------------------------------------
-  @Tag(name = "people")
-  @Operation(summary = ROLE_PERSON_DELETE_DESCRIPTION)
-  @DeleteMapping("/people/roles")
-  public ResponseEntity<String> deleteRoleFromPerson(
-      @RequestParam String personId,@RequestParam String roleId){
-
-    mappingService.deleteRoleFromPerson(personId,roleId);
-    return ResponseEntity.ok("Role removed from person successfully");
+    personService.deletePerson(personId);
+    return ResponseEntity.noContent().build();
   }
 
   // ===========================================================================
@@ -150,64 +131,52 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Gets all teams and associated skills
+  // Purpose: Returns all teams
   // ---------------------------------------------------------------------------
   @Tag(name = "teams")
-  @Operation(summary = TEAMS_DESCRIPTION)
-  @GetMapping("/teams")
-  public List<TeamSkillDTO> getTeamsWithSkills(){
-    return mappingService.getAllTeamsWithSkills();
+  @Operation(summary = "Returns all teams")
+  @GetMapping("teams")
+  public ResponseEntity<List<Team>> getAllTeams(){
+
+    List<Team> teams = teamService.getAllTeams();
+    return ResponseEntity.ok(teams);
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Adds a skill to a team
+  // Purpose: Returns a specific team by ID
   // ---------------------------------------------------------------------------
   @Tag(name = "teams")
-  @Operation(summary = SKILL_TEAM_DESCRIPTION)
-  @PostMapping("/teams/skills")
-  public ResponseEntity<String> addSkillToTeam(@RequestParam String teamId,
-      @RequestParam String skillName){
+  @Operation(summary = "Returns a team by ID")
+  @GetMapping("teams/{teamId}")
+  public ResponseEntity<Team> getTeamById(@PathVariable Integer teamId){
 
-    mappingService.addSkillToTeam(teamId,skillName);
-    return ResponseEntity.ok("Skill added to team successfully");
+    return teamService.getTeamByIdOptional(teamId).map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Deletes a skill from a team
+  // Purpose: Creates a new team
   // ---------------------------------------------------------------------------
   @Tag(name = "teams")
-  @Operation(summary = SKILL_TEAM_DELETE_DESCRIPTION)
-  @DeleteMapping("/teams/skills")
-  public ResponseEntity<String> deleteSkillFromTeam(@RequestParam String teamId,
-      @RequestParam String skillName){
+  @Operation(summary = "Creates a new team")
+  @PostMapping("/teams")
+  public ResponseEntity<Team> createTeam(@RequestParam String teamName,
+      @RequestParam(required = false) String teamDescription){
 
-    mappingService.deleteSkillFromTeam(teamId,skillName);
-    return ResponseEntity.ok("Skill removed from team successfully");
+    Team createdTeam = teamService.createTeam(teamName,teamDescription);
+    return ResponseEntity.ok(createdTeam);
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Adds a description to a team
+  // Purpose: Deletes a team by ID
   // ---------------------------------------------------------------------------
   @Tag(name = "teams")
-  @Operation(summary = TEAMS_DESCRIPTIONS_DESCRIPTION)
-  @PostMapping("/teams/descriptions")
-  public ResponseEntity<String> addTeamDescription(@RequestParam String teamId,
-      @RequestParam String description){
+  @Operation(summary = "Deletes a team by ID")
+  @DeleteMapping("/teams/{teamId}")
+  public ResponseEntity<Void> deleteTeam(@PathVariable Integer teamId){
 
-    mappingService.addDescriptionToTeam(teamId,description);
-    return ResponseEntity.ok("Description added to team");
-  }
-
-  // ---------------------------------------------------------------------------
-  // Purpose: Delete a description from a team
-  // ---------------------------------------------------------------------------
-  @Tag(name = "teams")
-  @Operation(summary = TEAMS_DESCRIPTIONS_DELETE_DESCRIPTION)
-  @DeleteMapping("/teams/descriptions")
-  public ResponseEntity<String> deleteTeamDescription(
-      @RequestParam String teamId){
-    mappingService.deleteDescriptionFromTeam(teamId);
-    return ResponseEntity.ok("Description removed from team: " + teamId);
+    teamService.deleteTeam(teamId);
+    return ResponseEntity.noContent().build();
   }
 
   // ===========================================================================
@@ -215,90 +184,52 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Gets all roles with associated teams and skills
+  // Purpose: Returns all roles
   // ---------------------------------------------------------------------------
   @Tag(name = "roles")
-  @Operation(summary = ROLES_DESCRIPTION)
-  @GetMapping("/roles")
-  public List<RoleDTO> getAllRoles(){
-    return mappingService.getAllRoles();
+  @Operation(summary = "Returns all roles")
+  @GetMapping("roles")
+  public ResponseEntity<List<Role>> getAllRoles(){
+
+    List<Role> roles = roleService.getAllRoles();
+    return ResponseEntity.ok(roles);
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Adds a team to a role
+  // Purpose: Returns a specific role by ID
   // ---------------------------------------------------------------------------
   @Tag(name = "roles")
-  @Operation(summary = TEAM_ROLE_DESCRIPTION)
-  @PostMapping("/roles/teams")
-  public ResponseEntity<String> addTeamToRole(@RequestParam String roleId,
-      @RequestParam String teamId){
+  @Operation(summary = "Returns a role by ID")
+  @GetMapping("roles/{roleId}")
+  public ResponseEntity<Role> getRoleById(@PathVariable Integer roleId){
 
-    mappingService.addTeamToRole(roleId,teamId);
-    return ResponseEntity.ok("Team added to role successfully");
+    return roleService.getRoleByIdOptional(roleId).map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Deletes a team from a role
+  // Purpose: Creates a new role
   // ---------------------------------------------------------------------------
   @Tag(name = "roles")
-  @Operation(summary = TEAM_ROLE_DELETE_DESCRIPTION)
-  @DeleteMapping("/roles/teams")
-  public ResponseEntity<String> deleteTeamFromRole(@RequestParam String roleId,
-      @RequestParam String teamId){
+  @Operation(summary = "Creates a new role")
+  @PostMapping("/roles")
+  public ResponseEntity<Role> createRole(@RequestParam String roleName,
+      @RequestParam(required = false) String roleDescription){
 
-    mappingService.deleteTeamFromRole(roleId,teamId);
-    return ResponseEntity.ok("Team removed from role successfully");
+    Role createdRole = roleService.createRole(roleName,roleDescription);
+    return ResponseEntity.ok(createdRole);
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Adds a skill to a role
+  // Purpose: Deletes a role by ID
   // ---------------------------------------------------------------------------
   @Tag(name = "roles")
-  @Operation(summary = SKILL_ROLE_DESCRIPTION)
-  @PostMapping("/roles/skills")
-  public ResponseEntity<String> addSkillToRole(@RequestParam String roleId,
-      @RequestParam String skillId){
+  @Operation(summary = "Deletes a role by ID")
+  @DeleteMapping("/roles/{roleId}")
+  public ResponseEntity<Void> deleteRole(@PathVariable Integer roleId){
 
-    mappingService.addSkillToRole(roleId,skillId);
-    return ResponseEntity.ok("Skill added to role successfully");
-  }
-
-  // ---------------------------------------------------------------------------
-  // Purpose: Deletes a skill from a role
-  // ---------------------------------------------------------------------------
-  @Tag(name = "roles")
-  @Operation(summary = SKILL_ROLE_DELETE_DESCRIPTION)
-  @DeleteMapping("/roles/skills")
-  public ResponseEntity<String> deleteSkillFromRole(@RequestParam String roleId,
-      @RequestParam String skillId){
-
-    mappingService.deleteSkillFromRole(roleId,skillId);
-    return ResponseEntity.ok("Skill removed from role successfully");
-  }
-
-  // ---------------------------------------------------------------------------
-  // Purpose: Adds a description to a role
-  // ---------------------------------------------------------------------------
-  @Tag(name = "roles")
-  @Operation(summary = ROLES_DESCRIPTIONS_DESCRIPTION)
-  @PostMapping("/roles/descriptions")
-  public ResponseEntity<String> addRoleDescription(@RequestParam String roleId,
-      @RequestParam String description){
-
-    mappingService.addDescriptionToRole(roleId,description);
-    return ResponseEntity.ok("Description added to role");
-  }
-
-  // ---------------------------------------------------------------------------
-  // Purpose: Deletes a description from a role
-  // ---------------------------------------------------------------------------
-  @Tag(name = "roles")
-  @Operation(summary = ROLES_DESCRIPTIONS_DELETE_DESCRIPTION)
-  @DeleteMapping("/roles/descriptions")
-  public ResponseEntity<String> deleteRoleDescription(
-      @RequestParam String roleId){
-    mappingService.deleteDescriptionFromRole(roleId);
-    return ResponseEntity.ok("Description removed from role: " + roleId);
+    roleService.deleteRole(roleId);
+    return ResponseEntity.noContent().build();
   }
 
   // ===========================================================================
@@ -306,13 +237,52 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Gets all skills
+  // Purpose: Returns all skills
   // ---------------------------------------------------------------------------
   @Tag(name = "skills")
-  @Operation(summary = SKILLS_DESCRIPTION)
-  @GetMapping("/skills")
-  public List<String> getAllSkills(){
-    return mappingService.getAllSkills();
+  @Operation(summary = "Returns all skills")
+  @GetMapping("skills")
+  public ResponseEntity<List<Skill>> getAllSkills(){
+
+    List<Skill> skills = skillService.getAllSkills();
+    return ResponseEntity.ok(skills);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Returns a specific skill by ID
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Returns a skill by ID")
+  @GetMapping("skills/{skillId}")
+  public ResponseEntity<Skill> getSkillById(@PathVariable Integer skillId){
+
+    return skillService.getSkillByIdOptional(skillId).map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Creates a new skill
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Creates a new skill")
+  @PostMapping("/skills")
+  public ResponseEntity<Skill> createSkill(@RequestParam String skillName,
+      @RequestParam(required = false) String skillDescription){
+
+    Skill createdSkill = skillService.createSkill(skillName,skillDescription);
+    return ResponseEntity.ok(createdSkill);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Deletes a skill by ID
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Deletes a skill by ID")
+  @DeleteMapping("/skills/{skillId}")
+  public ResponseEntity<Void> deleteSkill(@PathVariable Integer skillId){
+
+    skillService.deleteSkill(skillId);
+    return ResponseEntity.noContent().build();
   }
 
   // ===========================================================================
@@ -493,5 +463,18 @@ public class PeopleController{
     return ResponseEntity.ok(Map.of("status","success","eid",user.getEid(),
         "firstName",user.getFirstName(),"lastName",user.getLastName(),
         "permissions",permissions));
+  }
+  // ===========================================================================
+  // EMPLOYEES
+  // ===========================================================================
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Gets all employees and RATS employee data
+  // ---------------------------------------------------------------------------
+  @Tag(name = "employees")
+  @Operation(summary = EMPLOYEES_DESCRIPTION)
+  @GetMapping("/employees")
+  public List<Employee> getAllEmployees(){
+    return employeeService.getAllEmployees();
   }
 }
