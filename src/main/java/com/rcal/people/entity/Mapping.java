@@ -15,32 +15,14 @@ public class Mapping{
   private Long id;
 
   @Column(name = "from_entity_id", nullable = false)
-  private String fromEntityId;
+  private Long fromEntityId;
 
   @Column(name = "from_entity_type", nullable = false)
   private String fromEntityType;
 
   @Column(name = "to_entity_id", nullable = false)
-  private String toEntityId;
+  private Long toEntityId;
 
   @Column(name = "to_entity_type", nullable = false)
   private String toEntityType;
-
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private LocalDateTime createdAt;
-
-  @Column(name = "updated_at", nullable = false)
-  private LocalDateTime updatedAt;
-
-  @PrePersist
-  protected void onCreate(){
-    LocalDateTime now = LocalDateTime.now();
-    createdAt = now;
-    updatedAt = now;
-  }
-
-  @PreUpdate
-  protected void onUpdate(){
-    updatedAt = LocalDateTime.now();
-  }
 }

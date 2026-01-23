@@ -1,20 +1,23 @@
 package com.rcal.people.controller;
 
 import com.rcal.people.entity.*;
+import com.rcal.people.entity.Mapping;
 import com.rcal.people.model.*;
+import com.rcal.people.repository.read.ReadRoleRepository;
+import com.rcal.people.repository.read.ReadTeamRepository;
 import com.rcal.people.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.rcal.people.configuration.OpenApiDescriptionConfiguration.*;
 
@@ -31,6 +34,8 @@ public class PeopleController{
   private final TeamService teamService;
   private final RoleService roleService;
   private final SkillService skillService;
+  private final ReadTeamRepository readTeamRepository;
+  private final ReadRoleRepository readRoleRepository;
 
   public PeopleController(EmployeeService employeeService,
       MappingService mappingService, GithubContentService githubContentService,
@@ -38,7 +43,8 @@ public class PeopleController{
       EmployeesPreferredHoursService employeesPreferredHoursService,
       EmployeeLoginService employeeLoginService, PersonService personService,
       TeamService teamService, RoleService roleService,
-      SkillService skillService) {
+      SkillService skillService, ReadTeamRepository readTeamRepository,
+      ReadRoleRepository readRoleRepository) {
     this.employeeService = employeeService;
     this.mappingService = mappingService;
     this.githubContentService = githubContentService;
@@ -49,6 +55,8 @@ public class PeopleController{
     this.teamService = teamService;
     this.roleService = roleService;
     this.skillService = skillService;
+    this.readTeamRepository = readTeamRepository;
+    this.readRoleRepository = readRoleRepository;
   }
 
   // ===========================================================================
@@ -80,14 +88,23 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Returns all people
+  // Purpose: Returns all people (summary view, paginated)
   // ---------------------------------------------------------------------------
   @Tag(name = "people")
-  @Operation(summary = "Returns all people")
+  @Operation(summary = "Returns all people (summary view)")
   @GetMapping("people")
-  public ResponseEntity<List<Person>> getAllPeople(){
-    List<Person> people = personService.getAllPeople();
-    return ResponseEntity.ok(people);
+  public ResponseEntity<Page<PersonSummaryDTO>> getAllPeople(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "25") int size){
+
+    Pageable pageable = PageRequest.of(page,size);
+
+    Page<Person> peoplePage = personService.getAllPeople(pageable);
+
+    Page<PersonSummaryDTO> summaryPage = peoplePage
+        .map(person -> personService.buildPersonSummary(person.getPersonId()));
+
+    return ResponseEntity.ok(summaryPage);
   }
 
   // ---------------------------------------------------------------------------
@@ -96,10 +113,48 @@ public class PeopleController{
   @Tag(name = "people")
   @Operation(summary = "Returns a person by ID")
   @GetMapping("people/{personId}")
-  public ResponseEntity<Person> getPersonById(@PathVariable Integer personId){
+  public ResponseEntity<PersonSummaryDTO> getPersonById(
+      @PathVariable Integer personId){
 
-    return personService.getPersonByIdOptional(personId).map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+    Person person = personService.getPersonById(personId);
+
+    List<Mapping> roleMappings = mappingService.getHigherEntities(
+        Long.valueOf(personId),EntityTypes.PERSON,EntityTypes.ROLE);
+
+    List<RoleBasicDTO> roles = new ArrayList<>();
+
+    for (Mapping mapping : roleMappings){
+      roles.add((RoleBasicDTO) mappingService
+          .getBasicByIdAndEntityType(mapping.getToEntityId(),EntityTypes.ROLE));
+    }
+
+    List<TeamBasicDTO> teams = new ArrayList<>();
+    List<Mapping> teamMappings = new ArrayList<>();
+
+    for (RoleBasicDTO role : roles){
+      teamMappings.addAll(mappingService.getLowerEntities(
+          Long.valueOf(role.getRoleId()),EntityTypes.ROLE,EntityTypes.TEAM));
+    }
+
+    for (Mapping mapping : teamMappings){
+      teams.add((TeamBasicDTO) mappingService.getBasicByIdAndEntityType(
+          mapping.getFromEntityId(),EntityTypes.TEAM));
+    }
+
+    List<SkillBasicDTO> skills = new ArrayList<>();
+
+    List<Mapping> skillMappings = mappingService.getLowerEntities(
+        Long.valueOf(personId),EntityTypes.PERSON,EntityTypes.SKILL);
+
+    for (Mapping mapping : skillMappings){
+      skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
+          mapping.getFromEntityId(),EntityTypes.SKILL));
+    }
+
+    PersonSummaryDTO result = new PersonSummaryDTO(person.getName(), teams,
+        roles, skills);
+
+    return ResponseEntity.ok(result);
   }
 
   // ---------------------------------------------------------------------------
@@ -115,14 +170,35 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Deletes a person by ID
+  // Purpose: Deletes a person by ID (and cleans up mappings)
   // ---------------------------------------------------------------------------
   @Tag(name = "people")
   @Operation(summary = "Deletes a person by ID")
   @DeleteMapping("/people/{personId}")
   public ResponseEntity<Void> deletePerson(@PathVariable Integer personId){
 
+    // Remove all mappings involving this person
+    mappingService.deleteAllMappingsForEntity(personId.longValue(),
+        EntityTypes.PERSON);
+
+    // Delete the person itself
     personService.deletePerson(personId);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Adds a person to a role
+  // ---------------------------------------------------------------------------
+  @Tag(name = "people")
+  @Operation(summary = "Adds a person to a role")
+  @PostMapping("/people/{personId}/roles/{roleId}")
+  public ResponseEntity<Void> addRoleToPerson(@PathVariable Integer personId,
+      @PathVariable Integer roleId){
+
+    mappingService.createMapping(personId.longValue(),EntityTypes.PERSON,
+        roleId.longValue(),EntityTypes.ROLE);
+
     return ResponseEntity.noContent().build();
   }
 
@@ -131,15 +207,18 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Returns all teams
+  // Purpose: Returns all teams (id + name only)
   // ---------------------------------------------------------------------------
   @Tag(name = "teams")
-  @Operation(summary = "Returns all teams")
-  @GetMapping("teams")
-  public ResponseEntity<List<Team>> getAllTeams(){
+  @Operation(summary = "Returns all teams (id and name only)")
+  @GetMapping("/teams")
+  public ResponseEntity<List<TeamBasicDTO>> getAllTeams(){
 
-    List<Team> teams = teamService.getAllTeams();
-    return ResponseEntity.ok(teams);
+    List<TeamBasicDTO> teamBasics = teamService.getAllTeams().stream()
+        .map(team -> new TeamBasicDTO(team.getTeamId(), team.getTeamName()))
+        .toList();
+
+    return ResponseEntity.ok(teamBasics);
   }
 
   // ---------------------------------------------------------------------------
@@ -148,10 +227,49 @@ public class PeopleController{
   @Tag(name = "teams")
   @Operation(summary = "Returns a team by ID")
   @GetMapping("teams/{teamId}")
-  public ResponseEntity<Team> getTeamById(@PathVariable Integer teamId){
+  public ResponseEntity<TeamSummaryDTO> getTeamById(
+      @PathVariable Integer teamId){
 
-    return teamService.getTeamByIdOptional(teamId).map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+    Team team = readTeamRepository.findById(teamId).orElseThrow(
+        () -> new RuntimeException("Team not found with id: " + teamId));
+
+    List<Mapping> roleMappings = mappingService.getHigherEntities(
+        Long.valueOf(teamId),EntityTypes.TEAM,EntityTypes.ROLE);
+
+    List<RoleBasicDTO> roles = new ArrayList<>();
+
+    for (Mapping mapping : roleMappings){
+      roles.add((RoleBasicDTO) mappingService
+          .getBasicByIdAndEntityType(mapping.getToEntityId(),EntityTypes.ROLE));
+    }
+
+    List<Person> people = new ArrayList<>();
+    List<Mapping> peopleMappings = new ArrayList<>();
+
+    for (RoleBasicDTO role : roles){
+      peopleMappings.addAll(mappingService.getLowerEntities(
+          Long.valueOf(role.getRoleId()),EntityTypes.ROLE,EntityTypes.PERSON));
+    }
+
+    for (Mapping mapping : peopleMappings){
+      people.add((Person) mappingService.getBasicByIdAndEntityType(
+          mapping.getFromEntityId(),EntityTypes.PERSON));
+    }
+
+    List<SkillBasicDTO> skills = new ArrayList<>();
+
+    List<Mapping> skillMappings = mappingService.getLowerEntities(
+        Long.valueOf(teamId),EntityTypes.TEAM,EntityTypes.SKILL);
+
+    for (Mapping mapping : skillMappings){
+      skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
+          mapping.getFromEntityId(),EntityTypes.SKILL));
+    }
+
+    TeamSummaryDTO result = new TeamSummaryDTO(team.getTeamName(),
+        team.getTeamDescription(), roles, people, skills);
+
+    return ResponseEntity.ok(result);
   }
 
   // ---------------------------------------------------------------------------
@@ -168,14 +286,49 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Deletes a team by ID
+  // Purpose: Deletes a team by ID (and cleans up mappings)
   // ---------------------------------------------------------------------------
   @Tag(name = "teams")
   @Operation(summary = "Deletes a team by ID")
   @DeleteMapping("/teams/{teamId}")
   public ResponseEntity<Void> deleteTeam(@PathVariable Integer teamId){
 
+    // Remove all mappings involving this team
+    mappingService.deleteAllMappingsForEntity(teamId.longValue(),
+        EntityTypes.TEAM);
+
+    // Delete the team itself
     teamService.deleteTeam(teamId);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Adds a team to a role
+  // ---------------------------------------------------------------------------
+  @Tag(name = "teams")
+  @Operation(summary = "Adds a team to a role")
+  @PostMapping("/teams/{teamId}/roles/{roleId}")
+  public ResponseEntity<Void> addRoleToTeam(@PathVariable Integer teamId,
+      @PathVariable Integer roleId){
+
+    mappingService.createMapping(teamId.longValue(),EntityTypes.TEAM,
+        roleId.longValue(),EntityTypes.ROLE);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Updates a team's description
+  // ---------------------------------------------------------------------------
+  @Tag(name = "teams")
+  @Operation(summary = "Updates a team's description")
+  @PutMapping("/teams/{teamId}/description")
+  public ResponseEntity<Void> updateTeamDescription(
+      @PathVariable Integer teamId,
+      @RequestBody(required = false) String description){
+
+    teamService.updateTeamDescription(teamId,description);
     return ResponseEntity.noContent().build();
   }
 
@@ -184,15 +337,18 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Returns all roles
+  // Purpose: Returns all roles (id + name only)
   // ---------------------------------------------------------------------------
   @Tag(name = "roles")
-  @Operation(summary = "Returns all roles")
-  @GetMapping("roles")
-  public ResponseEntity<List<Role>> getAllRoles(){
+  @Operation(summary = "Returns all roles (id and name only)")
+  @GetMapping("/roles")
+  public ResponseEntity<List<RoleBasicDTO>> getAllRoles(){
 
-    List<Role> roles = roleService.getAllRoles();
-    return ResponseEntity.ok(roles);
+    List<RoleBasicDTO> roleBasics = roleService.getAllRoles().stream()
+        .map(role -> new RoleBasicDTO(role.getRoleId(), role.getRoleName()))
+        .toList();
+
+    return ResponseEntity.ok(roleBasics);
   }
 
   // ---------------------------------------------------------------------------
@@ -201,10 +357,46 @@ public class PeopleController{
   @Tag(name = "roles")
   @Operation(summary = "Returns a role by ID")
   @GetMapping("roles/{roleId}")
-  public ResponseEntity<Role> getRoleById(@PathVariable Integer roleId){
+  public ResponseEntity<RoleSummaryDTO> getRoleById(
+      @PathVariable Integer roleId){
 
-    return roleService.getRoleByIdOptional(roleId).map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
+    Role role = readRoleRepository.findById(roleId).orElseThrow(
+        () -> new RuntimeException("Role not found with id: " + roleId));
+
+    List<Mapping> teamMappings = mappingService.getLowerEntities(
+        Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.TEAM);
+
+    List<TeamBasicDTO> teams = new ArrayList<>();
+
+    for (Mapping mapping : teamMappings){
+      teams.add((TeamBasicDTO) mappingService.getBasicByIdAndEntityType(
+          mapping.getFromEntityId(),EntityTypes.TEAM));
+    }
+
+    List<Mapping> peopleMappings = mappingService.getLowerEntities(
+        Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.PERSON);
+
+    List<Person> people = new ArrayList<>();
+
+    for (Mapping mapping : peopleMappings){
+      people.add((Person) mappingService.getBasicByIdAndEntityType(
+          mapping.getFromEntityId(),EntityTypes.PERSON));
+    }
+
+    List<Mapping> skillMappings = mappingService.getLowerEntities(
+        Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.SKILL);
+
+    List<SkillBasicDTO> skills = new ArrayList<>();
+
+    for (Mapping mapping : skillMappings){
+      skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
+          mapping.getFromEntityId(),EntityTypes.SKILL));
+    }
+
+    RoleSummaryDTO result = new RoleSummaryDTO(role.getRoleName(),
+        role.getRoleDescription(), teams, skills, people);
+
+    return ResponseEntity.ok(result);
   }
 
   // ---------------------------------------------------------------------------
@@ -221,14 +413,34 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Deletes a role by ID
+  // Purpose: Deletes a role by ID (and cleans up mappings)
   // ---------------------------------------------------------------------------
   @Tag(name = "roles")
   @Operation(summary = "Deletes a role by ID")
   @DeleteMapping("/roles/{roleId}")
   public ResponseEntity<Void> deleteRole(@PathVariable Integer roleId){
 
+    // Remove all mappings involving this role
+    mappingService.deleteAllMappingsForEntity(roleId.longValue(),
+        EntityTypes.ROLE);
+
+    // Delete the role itself
     roleService.deleteRole(roleId);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Updates a role's description
+  // ---------------------------------------------------------------------------
+  @Tag(name = "roles")
+  @Operation(summary = "Updates a role's description")
+  @PutMapping("/roles/{roleId}/description")
+  public ResponseEntity<Void> updateRoleDescription(
+      @PathVariable Integer roleId,
+      @RequestBody(required = false) String description){
+
+    roleService.updateRoleDescription(roleId,description);
     return ResponseEntity.noContent().build();
   }
 
@@ -237,15 +449,18 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Returns all skills
+  // Purpose: Returns all skills (id + name only)
   // ---------------------------------------------------------------------------
   @Tag(name = "skills")
-  @Operation(summary = "Returns all skills")
-  @GetMapping("skills")
-  public ResponseEntity<List<Skill>> getAllSkills(){
+  @Operation(summary = "Returns all skills (id and name only)")
+  @GetMapping("/skills")
+  public ResponseEntity<List<SkillBasicDTO>> getAllSkills(){
 
-    List<Skill> skills = skillService.getAllSkills();
-    return ResponseEntity.ok(skills);
+    List<SkillBasicDTO> skillBasics = skillService.getAllSkills().stream().map(
+        skill -> new SkillBasicDTO(skill.getSkillId(), skill.getSkillName()))
+        .toList();
+
+    return ResponseEntity.ok(skillBasics);
   }
 
   // ---------------------------------------------------------------------------
@@ -274,14 +489,79 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Deletes a skill by ID
+  // Purpose: Deletes a skill by ID (and cleans up mappings)
   // ---------------------------------------------------------------------------
   @Tag(name = "skills")
   @Operation(summary = "Deletes a skill by ID")
   @DeleteMapping("/skills/{skillId}")
   public ResponseEntity<Void> deleteSkill(@PathVariable Integer skillId){
 
+    // Remove all mappings involving this skill
+    mappingService.deleteAllMappingsForEntity(skillId.longValue(),
+        EntityTypes.SKILL);
+
+    // Delete the skill itself
     skillService.deleteSkill(skillId);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Adds a skill to a team
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Adds a skill to a team")
+  @PostMapping("/skills/{skillId}/teams/{teamId}")
+  public ResponseEntity<Void> addSkillToTeam(@PathVariable Integer skillId,
+      @PathVariable Integer teamId){
+
+    mappingService.createMapping(skillId.longValue(),EntityTypes.SKILL,
+        teamId.longValue(),EntityTypes.TEAM);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Adds a skill to a role
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Adds a skill to a role")
+  @PostMapping("/skills/{skillId}/roles/{roleId}")
+  public ResponseEntity<Void> addSkillToRole(@PathVariable Integer skillId,
+      @PathVariable Integer roleId){
+
+    mappingService.createMapping(skillId.longValue(),EntityTypes.SKILL,
+        roleId.longValue(),EntityTypes.ROLE);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Adds a skill to a person
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Adds a skill to a person")
+  @PostMapping("/skills/{skillId}/people/{personId}")
+  public ResponseEntity<Void> addSkillToPerson(@PathVariable Integer skillId,
+      @PathVariable Integer personId){
+
+    mappingService.createMapping(skillId.longValue(),EntityTypes.SKILL,
+        personId.longValue(),EntityTypes.PERSON);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Updates a skill's description
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Updates a skill's description")
+  @PutMapping("/skills/{skillId}/description")
+  public ResponseEntity<Void> updateSkillDescription(
+      @PathVariable Integer skillId,
+      @RequestBody(required = false) String description){
+
+    skillService.updateSkillDescription(skillId,description);
     return ResponseEntity.noContent().build();
   }
 

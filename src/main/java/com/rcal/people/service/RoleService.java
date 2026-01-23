@@ -65,4 +65,21 @@ public class RoleService{
   public void deleteRole(Integer roleId){
     writeRoleRepository.deleteById(roleId);
   }
+
+  // ---------------------------------------------------------------------------
+  // Update role description
+  // ---------------------------------------------------------------------------
+  public void updateRoleDescription(Integer roleId,String description){
+
+    if (roleId == null){
+      throw new IllegalArgumentException("Role ID must not be null");
+    }
+
+    int updatedRows = writeRoleRepository.updateRoleDescription(roleId,
+        description);
+
+    if (updatedRows == 0){
+      throw new RuntimeException("Role not found with id: " + roleId);
+    }
+  }
 }

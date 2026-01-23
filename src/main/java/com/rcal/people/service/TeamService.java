@@ -65,4 +65,21 @@ public class TeamService{
   public void deleteTeam(Integer teamId){
     writeTeamRepository.deleteById(teamId);
   }
+
+  // ---------------------------------------------------------------------------
+  // Update team description
+  // ---------------------------------------------------------------------------
+  public void updateTeamDescription(Integer teamId,String description){
+
+    if (teamId == null){
+      throw new IllegalArgumentException("Team ID must not be null");
+    }
+
+    int updatedRows = writeTeamRepository.updateTeamDescription(teamId,
+        description);
+
+    if (updatedRows == 0){
+      throw new RuntimeException("Team not found with id: " + teamId);
+    }
+  }
 }

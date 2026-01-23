@@ -65,4 +65,22 @@ public class SkillService{
   public void deleteSkill(Integer skillId){
     writeSkillRepository.deleteById(skillId);
   }
+
+  // ---------------------------------------------------------------------------
+  // Update skill description
+  // ---------------------------------------------------------------------------
+  public void updateSkillDescription(Integer skillId,String description){
+
+    if (skillId == null){
+      throw new IllegalArgumentException("Skill ID must not be null");
+    }
+
+    int updatedRows = writeSkillRepository.updateSkillDescription(skillId,
+        description);
+
+    if (updatedRows == 0){
+      throw new RuntimeException("Skill not found with id: " + skillId);
+    }
+  }
+
 }

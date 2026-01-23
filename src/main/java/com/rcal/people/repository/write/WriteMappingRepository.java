@@ -9,12 +9,4 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional("writeTransactionManager")
 public interface WriteMappingRepository extends JpaRepository<Mapping, Long>{
 
-  // Delete a specific mapping (PERSON → SKILL, ROLE → TEAM, etc.)
-  void deleteByFromEntityTypeAndFromEntityIdAndToEntityTypeAndToEntityId(
-      String fromEntityType,String fromEntityId,String toEntityType,
-      String toEntityId);
-
-  // Delete all mappings of a target type for the given entity
-  void deleteByFromEntityTypeAndFromEntityIdAndToEntityType(
-      String fromEntityType,String fromEntityId,String toEntityType);
 }
