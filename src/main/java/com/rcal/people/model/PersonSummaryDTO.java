@@ -11,6 +11,8 @@ public class PersonSummaryDTO{
 
   private String name;
 
+  private Long personId;
+
   private List<TeamBasicDTO> teams;
 
   private List<RoleBasicDTO> roles;

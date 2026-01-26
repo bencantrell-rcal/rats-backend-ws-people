@@ -67,7 +67,8 @@ public class PersonService{
           mapping.getFromEntityId(),EntityTypes.SKILL));
     }
 
-    return new PersonSummaryDTO(person.getName(), teams, roles, skills);
+    return new PersonSummaryDTO(person.getName(),
+        Long.valueOf(person.getPersonId()), teams, roles, skills);
   }
 
   public Page<Person> getAllPeople(Pageable pageable){

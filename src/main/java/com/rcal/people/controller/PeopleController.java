@@ -8,11 +8,13 @@ import com.rcal.people.repository.read.ReadTeamRepository;
 import com.rcal.people.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.Exceptions;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -113,48 +115,51 @@ public class PeopleController{
   @Tag(name = "people")
   @Operation(summary = "Returns a person by ID")
   @GetMapping("people/{personId}")
-  public ResponseEntity<PersonSummaryDTO> getPersonById(
-      @PathVariable Integer personId){
+  public ResponseEntity<?> getPersonById(@PathVariable Integer personId){
 
-    Person person = personService.getPersonById(personId);
+    try{
+      Person person = personService.getPersonById(personId);
 
-    List<Mapping> roleMappings = mappingService.getHigherEntities(
-        Long.valueOf(personId),EntityTypes.PERSON,EntityTypes.ROLE);
+      List<Mapping> roleMappings = mappingService.getHigherEntities(
+          Long.valueOf(personId),EntityTypes.PERSON,EntityTypes.ROLE);
 
-    List<RoleBasicDTO> roles = new ArrayList<>();
+      List<RoleBasicDTO> roles = new ArrayList<>();
 
-    for (Mapping mapping : roleMappings){
-      roles.add((RoleBasicDTO) mappingService
-          .getBasicByIdAndEntityType(mapping.getToEntityId(),EntityTypes.ROLE));
+      for (Mapping mapping : roleMappings){
+        roles.add((RoleBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getToEntityId(),EntityTypes.ROLE));
+      }
+
+      List<TeamBasicDTO> teams = new ArrayList<>();
+      List<Mapping> teamMappings = new ArrayList<>();
+
+      for (RoleBasicDTO role : roles){
+        teamMappings.addAll(mappingService.getLowerEntities(
+            Long.valueOf(role.getRoleId()),EntityTypes.ROLE,EntityTypes.TEAM));
+      }
+
+      for (Mapping mapping : teamMappings){
+        teams.add((TeamBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.TEAM));
+      }
+
+      List<SkillBasicDTO> skills = new ArrayList<>();
+
+      List<Mapping> skillMappings = mappingService.getLowerEntities(
+          Long.valueOf(personId),EntityTypes.PERSON,EntityTypes.SKILL);
+
+      for (Mapping mapping : skillMappings){
+        skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.SKILL));
+      }
+
+      PersonSummaryDTO result = new PersonSummaryDTO(person.getName(),
+          Long.valueOf(person.getPersonId()), teams, roles, skills);
+
+      return ResponseEntity.ok(result);
+    } catch (Exception e){
+      return ResponseEntity.notFound().build();
     }
-
-    List<TeamBasicDTO> teams = new ArrayList<>();
-    List<Mapping> teamMappings = new ArrayList<>();
-
-    for (RoleBasicDTO role : roles){
-      teamMappings.addAll(mappingService.getLowerEntities(
-          Long.valueOf(role.getRoleId()),EntityTypes.ROLE,EntityTypes.TEAM));
-    }
-
-    for (Mapping mapping : teamMappings){
-      teams.add((TeamBasicDTO) mappingService.getBasicByIdAndEntityType(
-          mapping.getFromEntityId(),EntityTypes.TEAM));
-    }
-
-    List<SkillBasicDTO> skills = new ArrayList<>();
-
-    List<Mapping> skillMappings = mappingService.getLowerEntities(
-        Long.valueOf(personId),EntityTypes.PERSON,EntityTypes.SKILL);
-
-    for (Mapping mapping : skillMappings){
-      skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
-          mapping.getFromEntityId(),EntityTypes.SKILL));
-    }
-
-    PersonSummaryDTO result = new PersonSummaryDTO(person.getName(), teams,
-        roles, skills);
-
-    return ResponseEntity.ok(result);
   }
 
   // ---------------------------------------------------------------------------
@@ -227,49 +232,52 @@ public class PeopleController{
   @Tag(name = "teams")
   @Operation(summary = "Returns a team by ID")
   @GetMapping("teams/{teamId}")
-  public ResponseEntity<TeamSummaryDTO> getTeamById(
-      @PathVariable Integer teamId){
+  public ResponseEntity<?> getTeamById(@PathVariable Integer teamId){
+    try{
+      Team team = readTeamRepository.findById(teamId).orElseThrow(
+          () -> new RuntimeException("Team not found with id: " + teamId));
 
-    Team team = readTeamRepository.findById(teamId).orElseThrow(
-        () -> new RuntimeException("Team not found with id: " + teamId));
+      List<Mapping> roleMappings = mappingService.getHigherEntities(
+          Long.valueOf(teamId),EntityTypes.TEAM,EntityTypes.ROLE);
 
-    List<Mapping> roleMappings = mappingService.getHigherEntities(
-        Long.valueOf(teamId),EntityTypes.TEAM,EntityTypes.ROLE);
+      List<RoleBasicDTO> roles = new ArrayList<>();
 
-    List<RoleBasicDTO> roles = new ArrayList<>();
+      for (Mapping mapping : roleMappings){
+        roles.add((RoleBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getToEntityId(),EntityTypes.ROLE));
+      }
 
-    for (Mapping mapping : roleMappings){
-      roles.add((RoleBasicDTO) mappingService
-          .getBasicByIdAndEntityType(mapping.getToEntityId(),EntityTypes.ROLE));
+      List<Person> people = new ArrayList<>();
+      List<Mapping> peopleMappings = new ArrayList<>();
+
+      for (RoleBasicDTO role : roles){
+        peopleMappings.addAll(
+            mappingService.getLowerEntities(Long.valueOf(role.getRoleId()),
+                EntityTypes.ROLE,EntityTypes.PERSON));
+      }
+
+      for (Mapping mapping : peopleMappings){
+        people.add((Person) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.PERSON));
+      }
+
+      List<SkillBasicDTO> skills = new ArrayList<>();
+
+      List<Mapping> skillMappings = mappingService.getLowerEntities(
+          Long.valueOf(teamId),EntityTypes.TEAM,EntityTypes.SKILL);
+
+      for (Mapping mapping : skillMappings){
+        skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.SKILL));
+      }
+
+      TeamSummaryDTO result = new TeamSummaryDTO(team.getTeamName(),
+          team.getTeamDescription(), roles, people, skills);
+
+      return ResponseEntity.ok(result);
+    } catch (Exception e){
+      return ResponseEntity.notFound().build();
     }
-
-    List<Person> people = new ArrayList<>();
-    List<Mapping> peopleMappings = new ArrayList<>();
-
-    for (RoleBasicDTO role : roles){
-      peopleMappings.addAll(mappingService.getLowerEntities(
-          Long.valueOf(role.getRoleId()),EntityTypes.ROLE,EntityTypes.PERSON));
-    }
-
-    for (Mapping mapping : peopleMappings){
-      people.add((Person) mappingService.getBasicByIdAndEntityType(
-          mapping.getFromEntityId(),EntityTypes.PERSON));
-    }
-
-    List<SkillBasicDTO> skills = new ArrayList<>();
-
-    List<Mapping> skillMappings = mappingService.getLowerEntities(
-        Long.valueOf(teamId),EntityTypes.TEAM,EntityTypes.SKILL);
-
-    for (Mapping mapping : skillMappings){
-      skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
-          mapping.getFromEntityId(),EntityTypes.SKILL));
-    }
-
-    TeamSummaryDTO result = new TeamSummaryDTO(team.getTeamName(),
-        team.getTeamDescription(), roles, people, skills);
-
-    return ResponseEntity.ok(result);
   }
 
   // ---------------------------------------------------------------------------
@@ -357,46 +365,48 @@ public class PeopleController{
   @Tag(name = "roles")
   @Operation(summary = "Returns a role by ID")
   @GetMapping("roles/{roleId}")
-  public ResponseEntity<RoleSummaryDTO> getRoleById(
-      @PathVariable Integer roleId){
+  public ResponseEntity<?> getRoleById(@PathVariable Integer roleId){
+    try{
+      Role role = readRoleRepository.findById(roleId).orElseThrow(
+          () -> new RuntimeException("Role not found with id: " + roleId));
 
-    Role role = readRoleRepository.findById(roleId).orElseThrow(
-        () -> new RuntimeException("Role not found with id: " + roleId));
+      List<Mapping> teamMappings = mappingService.getLowerEntities(
+          Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.TEAM);
 
-    List<Mapping> teamMappings = mappingService.getLowerEntities(
-        Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.TEAM);
+      List<TeamBasicDTO> teams = new ArrayList<>();
 
-    List<TeamBasicDTO> teams = new ArrayList<>();
+      for (Mapping mapping : teamMappings){
+        teams.add((TeamBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.TEAM));
+      }
 
-    for (Mapping mapping : teamMappings){
-      teams.add((TeamBasicDTO) mappingService.getBasicByIdAndEntityType(
-          mapping.getFromEntityId(),EntityTypes.TEAM));
+      List<Mapping> peopleMappings = mappingService.getLowerEntities(
+          Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.PERSON);
+
+      List<Person> people = new ArrayList<>();
+
+      for (Mapping mapping : peopleMappings){
+        people.add((Person) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.PERSON));
+      }
+
+      List<Mapping> skillMappings = mappingService.getLowerEntities(
+          Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.SKILL);
+
+      List<SkillBasicDTO> skills = new ArrayList<>();
+
+      for (Mapping mapping : skillMappings){
+        skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.SKILL));
+      }
+
+      RoleSummaryDTO result = new RoleSummaryDTO(role.getRoleName(),
+          role.getRoleDescription(), teams, skills, people);
+
+      return ResponseEntity.ok(result);
+    } catch (Exception e){
+      return ResponseEntity.notFound().build();
     }
-
-    List<Mapping> peopleMappings = mappingService.getLowerEntities(
-        Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.PERSON);
-
-    List<Person> people = new ArrayList<>();
-
-    for (Mapping mapping : peopleMappings){
-      people.add((Person) mappingService.getBasicByIdAndEntityType(
-          mapping.getFromEntityId(),EntityTypes.PERSON));
-    }
-
-    List<Mapping> skillMappings = mappingService.getLowerEntities(
-        Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.SKILL);
-
-    List<SkillBasicDTO> skills = new ArrayList<>();
-
-    for (Mapping mapping : skillMappings){
-      skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
-          mapping.getFromEntityId(),EntityTypes.SKILL));
-    }
-
-    RoleSummaryDTO result = new RoleSummaryDTO(role.getRoleName(),
-        role.getRoleDescription(), teams, skills, people);
-
-    return ResponseEntity.ok(result);
   }
 
   // ---------------------------------------------------------------------------
