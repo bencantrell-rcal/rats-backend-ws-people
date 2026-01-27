@@ -207,6 +207,21 @@ public class PeopleController{
     return ResponseEntity.noContent().build();
   }
 
+  // ---------------------------------------------------------------------------
+  // Purpose: Removes a person from a role
+  // ---------------------------------------------------------------------------
+  @Tag(name = "people")
+  @Operation(summary = "Removes a person from a role")
+  @DeleteMapping("/people/{personId}/roles/{roleId}")
+  public ResponseEntity<Void> removeRoleFromPerson(
+      @PathVariable Integer personId,@PathVariable Integer roleId){
+
+    mappingService.deleteMapping(personId.longValue(),EntityTypes.PERSON,
+        roleId.longValue(),EntityTypes.ROLE);
+
+    return ResponseEntity.noContent().build();
+  }
+
   // ===========================================================================
   // TEAMS
   // ===========================================================================
@@ -215,15 +230,32 @@ public class PeopleController{
   // Purpose: Returns all teams (id + name only)
   // ---------------------------------------------------------------------------
   @Tag(name = "teams")
-  @Operation(summary = "Returns all teams (id and name only)")
+  @Operation(summary = "Returns all teams with skills")
   @GetMapping("/teams")
-  public ResponseEntity<List<TeamBasicDTO>> getAllTeams(){
+  public ResponseEntity<List<TeamWithSkillsDTO>> getAllTeams(){
 
     List<TeamBasicDTO> teamBasics = teamService.getAllTeams().stream()
         .map(team -> new TeamBasicDTO(team.getTeamId(), team.getTeamName()))
         .toList();
 
-    return ResponseEntity.ok(teamBasics);
+    List<TeamWithSkillsDTO> result = new ArrayList<>();
+
+    for (TeamBasicDTO team : teamBasics){
+
+      List<SkillBasicDTO> skills = new ArrayList<>();
+
+      List<Mapping> skillMappings = mappingService.getLowerEntities(
+          Long.valueOf(team.getTeamId()),EntityTypes.TEAM,EntityTypes.SKILL);
+
+      for (Mapping mapping : skillMappings){
+        skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.SKILL));
+      }
+
+      result.add(new TeamWithSkillsDTO(team, skills));
+    }
+
+    return ResponseEntity.ok(result);
   }
 
   // ---------------------------------------------------------------------------
@@ -321,6 +353,21 @@ public class PeopleController{
       @PathVariable Integer roleId){
 
     mappingService.createMapping(teamId.longValue(),EntityTypes.TEAM,
+        roleId.longValue(),EntityTypes.ROLE);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Removes a team from a role
+  // ---------------------------------------------------------------------------
+  @Tag(name = "teams")
+  @Operation(summary = "Removes a team from a role")
+  @DeleteMapping("/teams/{teamId}/roles/{roleId}")
+  public ResponseEntity<Void> removeRoleFromTeam(@PathVariable Integer teamId,
+      @PathVariable Integer roleId){
+
+    mappingService.deleteMapping(teamId.longValue(),EntityTypes.TEAM,
         roleId.longValue(),EntityTypes.ROLE);
 
     return ResponseEntity.noContent().build();
@@ -532,6 +579,21 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
+  // Purpose: Removes a skill from a team
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Removes a skill from a team")
+  @DeleteMapping("/skills/{skillId}/teams/{teamId}")
+  public ResponseEntity<Void> removeSkillFromTeam(@PathVariable Integer skillId,
+      @PathVariable Integer teamId){
+
+    mappingService.deleteMapping(skillId.longValue(),EntityTypes.SKILL,
+        teamId.longValue(),EntityTypes.TEAM);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
   // Purpose: Adds a skill to a role
   // ---------------------------------------------------------------------------
   @Tag(name = "skills")
@@ -547,6 +609,21 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
+  // Purpose: Removes a skill from a role
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Removes a skill from a role")
+  @DeleteMapping("/skills/{skillId}/roles/{roleId}")
+  public ResponseEntity<Void> removeSkillFromRole(@PathVariable Integer skillId,
+      @PathVariable Integer roleId){
+
+    mappingService.deleteMapping(skillId.longValue(),EntityTypes.SKILL,
+        roleId.longValue(),EntityTypes.ROLE);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
   // Purpose: Adds a skill to a person
   // ---------------------------------------------------------------------------
   @Tag(name = "skills")
@@ -556,6 +633,21 @@ public class PeopleController{
       @PathVariable Integer personId){
 
     mappingService.createMapping(skillId.longValue(),EntityTypes.SKILL,
+        personId.longValue(),EntityTypes.PERSON);
+
+    return ResponseEntity.noContent().build();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Removes a skill from a person
+  // ---------------------------------------------------------------------------
+  @Tag(name = "skills")
+  @Operation(summary = "Removes a skill from a person")
+  @DeleteMapping("/skills/{skillId}/people/{personId}")
+  public ResponseEntity<Void> removeSkillFromPerson(
+      @PathVariable Integer skillId,@PathVariable Integer personId){
+
+    mappingService.deleteMapping(skillId.longValue(),EntityTypes.SKILL,
         personId.longValue(),EntityTypes.PERSON);
 
     return ResponseEntity.noContent().build();

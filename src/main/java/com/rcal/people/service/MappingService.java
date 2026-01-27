@@ -7,6 +7,7 @@ import com.rcal.people.model.SkillBasicDTO;
 import com.rcal.people.model.TeamBasicDTO;
 import com.rcal.people.repository.read.*;
 import com.rcal.people.repository.write.WriteMappingRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,6 +52,23 @@ public class MappingService{
     mapping.setToEntityType(toEntityType);
 
     return writeMappingRepository.save(mapping);
+  }
+
+  public void deleteMapping(Long fromEntityId,String fromEntityType,
+      Long toEntityId,String toEntityType){
+
+    // optional but recommended for symmetry & better errors
+    validateEntitiesExist(fromEntityId,fromEntityType,toEntityId,toEntityType);
+
+    int deleted = writeMappingRepository
+        .deleteByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
+            fromEntityId,fromEntityType,toEntityId,toEntityType);
+
+    if (deleted == 0){
+      throw new EntityNotFoundException(
+          String.format("Mapping not found: %s(%d) -> %s(%d)",fromEntityType,
+              fromEntityId,toEntityType,toEntityId));
+    }
   }
 
   // ---------------------------------------------------------------------------

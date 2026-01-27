@@ -8,5 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional("writeTransactionManager")
 public interface WriteMappingRepository extends JpaRepository<Mapping, Long>{
-
+  int deleteByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
+      Long fromEntityId,String fromEntityType,Long toEntityId,
+      String toEntityType);
 }
