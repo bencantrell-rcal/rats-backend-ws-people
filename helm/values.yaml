@@ -8,11 +8,11 @@ image:
 
 resources:
   requests:
-    cpu: "250m"
+    cpu: "100m"
     memory: "512Mi"
   limits:
-    cpu: "500m"
-    memory: "768Mi"
+    cpu: "1000m"
+    memory: "1536Mi"
 
 service:
   type: ClusterIP
