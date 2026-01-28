@@ -18,4 +18,8 @@ public interface ReadMappingRepository extends JpaRepository<Mapping, Long>{
 
   List<Mapping> findByToEntityTypeAndToEntityId(String toEntityType,
       Long toEntityId);
+
+  boolean existsByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
+      Long fromEntityId,String fromEntityType,Long toEntityId,
+      String toEntityType);
 }

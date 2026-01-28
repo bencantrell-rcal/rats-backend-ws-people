@@ -45,6 +45,15 @@ public class MappingService{
 
     validateEntitiesExist(fromEntityId,fromEntityType,toEntityId,toEntityType);
 
+    // Check if mapping already exists
+    boolean exists = readMappingRepository
+        .existsByFromEntityIdAndFromEntityTypeAndToEntityIdAndToEntityType(
+            fromEntityId,fromEntityType,toEntityId,toEntityType);
+
+    if (exists){
+      return null;
+    }
+
     Mapping mapping = new Mapping();
     mapping.setFromEntityId(fromEntityId);
     mapping.setFromEntityType(fromEntityType);
