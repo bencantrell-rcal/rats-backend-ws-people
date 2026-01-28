@@ -15,4 +15,9 @@ public class Person{
 
   @Column(name = "name")
   private String name;
+
+  @Lob
+  @Basic(fetch = FetchType.LAZY)
+  @Column(name = "headshot")
+  private byte[] headshot;
 }

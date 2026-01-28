@@ -3,17 +3,23 @@ package com.rcal.people.controller;
 import com.rcal.people.entity.*;
 import com.rcal.people.entity.Mapping;
 import com.rcal.people.model.*;
+import com.rcal.people.repository.read.ReadPersonRepository;
 import com.rcal.people.repository.read.ReadRoleRepository;
 import com.rcal.people.repository.read.ReadTeamRepository;
+import com.rcal.people.repository.write.WritePersonRepository;
 import com.rcal.people.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +41,8 @@ public class PeopleController{
   private final SkillService skillService;
   private final ReadTeamRepository readTeamRepository;
   private final ReadRoleRepository readRoleRepository;
+  private final ReadPersonRepository readPersonRepository;
+  private final WritePersonRepository writePersonRepository;
 
   public PeopleController(EmployeeService employeeService,
       MappingService mappingService,
@@ -43,7 +51,9 @@ public class PeopleController{
       EmployeeLoginService employeeLoginService, PersonService personService,
       TeamService teamService, RoleService roleService,
       SkillService skillService, ReadTeamRepository readTeamRepository,
-      ReadRoleRepository readRoleRepository) {
+      ReadRoleRepository readRoleRepository,
+      ReadPersonRepository readPersonRepository,
+      WritePersonRepository writePersonRepository) {
     this.employeeService = employeeService;
     this.mappingService = mappingService;
     this.employeePermissionService = employeePermissionService;
@@ -55,6 +65,8 @@ public class PeopleController{
     this.skillService = skillService;
     this.readTeamRepository = readTeamRepository;
     this.readRoleRepository = readRoleRepository;
+    this.readPersonRepository = readPersonRepository;
+    this.writePersonRepository = writePersonRepository;
   }
 
   // ===========================================================================
@@ -847,5 +859,50 @@ public class PeopleController{
   @GetMapping("/employees")
   public List<Employee> getAllEmployees(){
     return employeeService.getAllEmployees();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: temporary endpoint to upload headshots with local files
+  // ---------------------------------------------------------------------------
+  @Tag(name = "people")
+  @Operation(summary = "temporary endpoint to upload headshots with local files")
+  @PostMapping("/{id}/headshot-local")
+  public ResponseEntity<String> uploadLocalHeadshot(@PathVariable Integer id,
+      @RequestParam String filePath){
+    try{
+      Person person = readPersonRepository.findById(id)
+          .orElseThrow(() -> new RuntimeException("Person not found"));
+
+      byte[] imageBytes = Files.readAllBytes(Paths.get(filePath));
+      person.setHeadshot(imageBytes);
+
+      writePersonRepository.save(person);
+
+      return ResponseEntity.ok("Headshot loaded from local file successfully");
+    } catch (Exception e){
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Error loading headshot: " + e.getMessage());
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Purpose: Gets the headshot for a given person ID
+  // ---------------------------------------------------------------------------
+  @Tag(name = "people")
+  @Operation(summary = "Gets the headshot for a given person ID")
+  @GetMapping("/people/{personId}/headshot")
+  public ResponseEntity<byte[]> getHeadshot(@PathVariable Integer personId){
+    Person person = readPersonRepository.findById(personId)
+        .orElseThrow(() -> new RuntimeException("Person not found"));
+
+    byte[] headshot = person.getHeadshot();
+
+    if (headshot == null || headshot.length == 0){
+      return ResponseEntity.notFound().build();
+    }
+
+    // For now, hardcode content type to PNG (change if needed)
+    return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE,"image/png")
+        .body(headshot);
   }
 }
