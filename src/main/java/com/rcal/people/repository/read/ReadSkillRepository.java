@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ReadSkillRepository extends JpaRepository<Skill, Integer>{
 
+  boolean existsBySkillName(String name);
 }

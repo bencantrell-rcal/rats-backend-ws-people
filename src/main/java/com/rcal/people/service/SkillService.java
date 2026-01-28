@@ -5,6 +5,7 @@ import com.rcal.people.repository.read.ReadSkillRepository;
 import com.rcal.people.repository.write.WriteSkillRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,11 +14,14 @@ public class SkillService{
 
   private final ReadSkillRepository readSkillRepository;
   private final WriteSkillRepository writeSkillRepository;
+  private final GithubRepoService githubRepoService;
 
   public SkillService(ReadSkillRepository readSkillRepository,
-      WriteSkillRepository writeSkillRepository) {
+      WriteSkillRepository writeSkillRepository,
+      GithubRepoService githubRepoService) {
     this.readSkillRepository = readSkillRepository;
     this.writeSkillRepository = writeSkillRepository;
+    this.githubRepoService = githubRepoService;
   }
 
   // ---------------------------------------------------------------------------
@@ -81,6 +85,25 @@ public class SkillService{
     if (updatedRows == 0){
       throw new RuntimeException("Skill not found with id: " + skillId);
     }
+  }
+
+  public List<Skill> createSkillsFromGithub(long installationId,String repo,
+      String skillsDirectory,String branch) throws Exception{
+
+    List<String> skillNames = githubRepoService
+        .listMarkdownFiles(installationId,repo,skillsDirectory,branch);
+
+    List<Skill> created = new ArrayList<>();
+
+    for (String name : skillNames){
+      if (!readSkillRepository.existsBySkillName(name)){
+        Skill skill = new Skill();
+        skill.setSkillName(name);
+        created.add(writeSkillRepository.save(skill));
+      }
+    }
+
+    return created;
   }
 
 }

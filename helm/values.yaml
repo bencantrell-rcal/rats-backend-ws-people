@@ -41,3 +41,35 @@ spring:
       password: Rcal_1995!
 
 redeployTimestamp: "{{ now | unixEpoch }}"
+
+# Provides read only access to SOP repo-low security risk
+github:
+  app:
+    appId: 2747172
+    privateKey: "-----BEGIN RSA PRIVATE KEY-----
+  MIIEpAIBAAKCAQEAxamnKNzo6Aj3NhvBJWGkPCqGLlfLZDGQ6uEhVz0l+MxVdh+6
+  w3qUzKNl8dqx1j7tdfNcSPHbqcczSA+iP2lwhjFV9jEYi3x4WEoKM/NPjm/qNpfR
+  QsXoDaxmyZE7e0CnZrxZmkjsY1DN88mLouUV3RUfZXHDlgjO3egwHdqusLpDvTLt
+  1evby6znHs/vidIt7bQFylailXpEhD3IE0cGhODVWbHvGE1cmCFyrVd1KXviVsMo
+  MT0ojA4dgriMU1ZA3P6ksLVEKgA2KBHytyMhKdzG9Vmp4JKB8eTvX5yZjIPfmUSW
+  wjK8kF7BjGSRp+neEeAlDgi3lXOJ4QnS16wPgQIDAQABAoIBAH9TUYJZCw6s99G6
+  /yf9RbYcDmM72qCn7Rnf+4IeuZ8SwNpehgf1pnRLrRemMHg6AOzB3uh+I2myD66T
+  o4gFe551mVIFPjJb84mr5/ae/Nhb7xtLoFjK8zgbnfqpuw8iDrN3EKD56IvxOTmY
+  0oIT34mSWa8XIU48TkVTk+snOvBLaZBVg3nADcyIgF3NcnYnmWReVSF9ntE+auVw
+  6aEntXq8veOrlNmtPH9S+Ftg0uxTLVidScPJLHIFEHo8ZLwx+OSfDbEkgApv0s4W
+  Tk/Zs4twL9S2SSUKdVzbNRf8AvdxA7P5x19Aj685NoODGpCq4EKrOvpNs75xrJVQ
+  Ukdl9gECgYEA7v69XmNzWSQj9gvCEuGzneMaPc8jt0IPmrbRqnhB4MOeidwhfLI+
+  iXU6dgSHjmlEg4aHftEfOuKRkSYvZ3N3PmWOPm2Eo0c6KfVnHlnRDwTXpa4/SivR
+  8Ww/Asqq3BSp2QsnbqXw8jnSHKQG8Hv3/ex07W7DeB7u6h8kPTqY8QkCgYEA07oM
+  2PKq6uE5+3dkHYtjNeGcAO+Wdv/9+GrrRbZ4UwCN35ise+AN0SsOPETq+0n0XVXF
+  kWdgPlGfEvBrp5ykCUROq1fLYDmpAWRvLl3B0qjB0s2wGJ1+L1sZa53Qu9iohhzN
+  3fonNkeNuaRwRR7pFtWkq5Tu6FuoaGkvtr/O4LkCgYBHULRpSfvNib9BWFjdEYRr
+  hKz77KeXs5q8a/k8iQ3/Z+AS+yDy+K04j0aWmNtqX3cWWDpuWTCcfac6TM6wbAAV
+  GnDLqBqALmzowFW49MwxUxyWT9yK4XCQPeC/kIJTkcbtASsPFW1EmoRcD4YSlKt3
+  let+PiMN4Q0hx5EkxCuHIQKBgQCTJj8/mIhJbfdKWhPupK1zCTXPQLSmSAxO1qBl
+  dwfxR/VSbV2TSojP0si2An/93cxEAhSpldtB9KBGHWn0t90Zw6uZUg869VgMa60J
+  4IeQzVDIHcRBl1PXvczRCoHDzDRz4RkDKZSPGPPbDfopT+5XvGwSBBR20R0eU9yh
+  enVhoQKBgQCyLBB761SPMnjaCLqJE87cRavR4o32c8NWNacyisFLyBdgSO6wHokd
+  GnxMsD4U0ttlGKo93ci5EIZfVr54+0Mv3xewJQ2jPYLH1HJTILlUfH/b2i95BQ0L
+  Y62PMzQ27tqktMkLqOCPAkOuhD6uJDpoV7/ZPjcdG/MqU/aV4E/fqQ==
+  -----END RSA PRIVATE KEY-----"

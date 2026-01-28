@@ -8,13 +8,11 @@ import com.rcal.people.repository.read.ReadTeamRepository;
 import com.rcal.people.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.Exceptions;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -28,7 +26,6 @@ public class PeopleController{
 
   private final EmployeeService employeeService;
   private final MappingService mappingService;
-  private final GithubContentService githubContentService;
   private final EmployeePermissionService employeePermissionService;
   private final EmployeesPreferredHoursService employeesPreferredHoursService;
   private final EmployeeLoginService employeeLoginService;
@@ -40,7 +37,7 @@ public class PeopleController{
   private final ReadRoleRepository readRoleRepository;
 
   public PeopleController(EmployeeService employeeService,
-      MappingService mappingService, GithubContentService githubContentService,
+      MappingService mappingService,
       EmployeePermissionService employeePermissionService,
       EmployeesPreferredHoursService employeesPreferredHoursService,
       EmployeeLoginService employeeLoginService, PersonService personService,
@@ -49,7 +46,6 @@ public class PeopleController{
       ReadRoleRepository readRoleRepository) {
     this.employeeService = employeeService;
     this.mappingService = mappingService;
-    this.githubContentService = githubContentService;
     this.employeePermissionService = employeePermissionService;
     this.employeesPreferredHoursService = employeesPreferredHoursService;
     this.employeeLoginService = employeeLoginService;
@@ -506,12 +502,20 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Returns all skills (id + name only)
+  // Purpose: Gets all skills (id + name only). Syncs skills with the skills
+  // listed under Rcal-Products/SOP-Documentation/docs/skills
   // ---------------------------------------------------------------------------
   @Tag(name = "skills")
   @Operation(summary = "Returns all skills (id and name only)")
   @GetMapping("/skills")
   public ResponseEntity<List<SkillBasicDTO>> getAllSkills(){
+
+    try{
+      skillService.createSkillsFromGithub(Long.parseLong("106627340"),
+          "Rcal-Products/SOP-Documentation","docs/skills","main");
+    } catch (Exception e){
+      System.out.println(e);
+    }
 
     List<SkillBasicDTO> skillBasics = skillService.getAllSkills().stream().map(
         skill -> new SkillBasicDTO(skill.getSkillId(), skill.getSkillName()))
@@ -748,7 +752,7 @@ public class PeopleController{
   }
 
   // ---------------------------------------------------------------------------
-  // Purpose: Get all preferred time blocks for an employee
+  // Purpose: Gets all preferred time blocks for an employee
   // ---------------------------------------------------------------------------
   @Tag(name = "preferred hours")
   @Operation(summary = HOURS_DESCRIPTION)
@@ -790,21 +794,6 @@ public class PeopleController{
     employeesPreferredHoursService.deletePreferredHours(employeeId,blockId);
 
     return ResponseEntity.ok("Preferred hours block deleted");
-  }
-
-  // ===========================================================================
-  // DOCUMENTATION
-  // ===========================================================================
-
-  // ---------------------------------------------------------------------------
-  // Purpose: Retrieves markdown documentation files from GitHub
-  // ---------------------------------------------------------------------------
-  @Tag(name = "documentation")
-  @Operation(summary = "Fetch markdown documentation content")
-  @GetMapping("/docs/content")
-  public ResponseEntity<String> getMarkdownFile(@RequestParam String fileName){
-    return ResponseEntity
-        .ok(githubContentService.fetchPublicMarkdown(fileName));
   }
 
   // ===========================================================================
