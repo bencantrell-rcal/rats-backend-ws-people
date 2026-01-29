@@ -56,6 +56,12 @@ public class SkillService{
           "Skill name must contain alphabetic characters");
     }
 
+    if (skillDescription != null){
+      // Allow letters, numbers, basic punctuation, and spaces (NO quotes)
+      skillDescription = skillDescription.replaceAll("[^A-Za-z0-9 .,!?()-]","")
+          .trim().replaceAll("\\s+"," ");
+    }
+
     Skill skill = new Skill();
     skill.setSkillName(sanitizedName);
     skill.setSkillDescription(skillDescription);
@@ -77,6 +83,12 @@ public class SkillService{
 
     if (skillId == null){
       throw new IllegalArgumentException("Skill ID must not be null");
+    }
+
+    if (description != null){
+      // Allow letters, numbers, basic punctuation, and spaces (NO quotes)
+      description = description.replaceAll("[^A-Za-z0-9 .,!?()-]","").trim()
+          .replaceAll("\\s+"," ");
     }
 
     int updatedRows = writeSkillRepository.updateSkillDescription(skillId,

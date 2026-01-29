@@ -12,11 +12,13 @@ public class TeamSummaryDTO{
 
   private String teamName;
 
+  private Integer teamId;
+
   private String teamDescription;
 
   private List<RoleBasicDTO> roles;
 
-  private List<Person> people;
+  private List<PersonBasicDTO> people;
 
   private List<SkillBasicDTO> skills;
 }

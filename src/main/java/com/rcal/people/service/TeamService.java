@@ -52,6 +52,12 @@ public class TeamService{
           "Team name must contain alphabetic characters");
     }
 
+    if (teamDescription != null){
+      // Allow letters, numbers, basic punctuation, and spaces (NO quotes)
+      teamDescription = teamDescription.replaceAll("[^A-Za-z0-9 .,!?()-]","")
+          .trim().replaceAll("\\s+"," ");
+    }
+
     Team team = new Team();
     team.setTeamName(sanitizedName);
     team.setTeamDescription(teamDescription);
@@ -75,6 +81,12 @@ public class TeamService{
       throw new IllegalArgumentException("Team ID must not be null");
     }
 
+    if (description != null){
+      // Allow letters, numbers, basic punctuation, and spaces (NO quotes)
+      description = description.replaceAll("[^A-Za-z0-9 .,!?()-]","").trim()
+          .replaceAll("\\s+"," ");
+    }
+
     int updatedRows = writeTeamRepository.updateTeamDescription(teamId,
         description);
 
@@ -82,4 +94,5 @@ public class TeamService{
       throw new RuntimeException("Team not found with id: " + teamId);
     }
   }
+
 }

@@ -287,7 +287,7 @@ public class PeopleController{
             mapping.getToEntityId(),EntityTypes.ROLE));
       }
 
-      List<Person> people = new ArrayList<>();
+      List<PersonBasicDTO> people = new ArrayList<>();
       List<Mapping> peopleMappings = new ArrayList<>();
 
       for (RoleBasicDTO role : roles){
@@ -297,7 +297,7 @@ public class PeopleController{
       }
 
       for (Mapping mapping : peopleMappings){
-        people.add((Person) mappingService.getBasicByIdAndEntityType(
+        people.add((PersonBasicDTO) mappingService.getBasicByIdAndEntityType(
             mapping.getFromEntityId(),EntityTypes.PERSON));
       }
 
@@ -312,7 +312,7 @@ public class PeopleController{
       }
 
       TeamSummaryDTO result = new TeamSummaryDTO(team.getTeamName(),
-          team.getTeamDescription(), roles, people, skills);
+          team.getTeamId(), team.getTeamDescription(), roles, people, skills);
 
       return ResponseEntity.ok(result);
     } catch (Exception e){
@@ -438,10 +438,10 @@ public class PeopleController{
       List<Mapping> peopleMappings = mappingService.getLowerEntities(
           Long.valueOf(roleId),EntityTypes.ROLE,EntityTypes.PERSON);
 
-      List<Person> people = new ArrayList<>();
+      List<PersonBasicDTO> people = new ArrayList<>();
 
       for (Mapping mapping : peopleMappings){
-        people.add((Person) mappingService.getBasicByIdAndEntityType(
+        people.add((PersonBasicDTO) mappingService.getBasicByIdAndEntityType(
             mapping.getFromEntityId(),EntityTypes.PERSON));
       }
 
@@ -456,7 +456,7 @@ public class PeopleController{
       }
 
       RoleSummaryDTO result = new RoleSummaryDTO(role.getRoleName(),
-          role.getRoleDescription(), teams, skills, people);
+          role.getRoleId(), role.getRoleDescription(), teams, skills, people);
 
       return ResponseEntity.ok(result);
     } catch (Exception e){

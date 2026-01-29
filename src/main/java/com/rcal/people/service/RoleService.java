@@ -52,6 +52,12 @@ public class RoleService{
           "Role name must contain alphabetic characters");
     }
 
+    if (roleDescription != null){
+      // Allow letters, numbers, basic punctuation, and spaces (NO quotes)
+      roleDescription = roleDescription.replaceAll("[^A-Za-z0-9 .,!?()-]","")
+          .trim().replaceAll("\\s+"," ");
+    }
+
     Role role = new Role();
     role.setRoleName(sanitizedName);
     role.setRoleDescription(roleDescription);
@@ -75,6 +81,12 @@ public class RoleService{
       throw new IllegalArgumentException("Role ID must not be null");
     }
 
+    if (description != null){
+      // Allow letters, numbers, basic punctuation, and spaces (NO quotes)
+      description = description.replaceAll("[^A-Za-z0-9 .,!?()-]","").trim()
+          .replaceAll("\\s+"," ");
+    }
+
     int updatedRows = writeRoleRepository.updateRoleDescription(roleId,
         description);
 
@@ -82,4 +94,5 @@ public class RoleService{
       throw new RuntimeException("Role not found with id: " + roleId);
     }
   }
+
 }

@@ -1,10 +1,7 @@
 package com.rcal.people.service;
 
 import com.rcal.people.entity.Mapping;
-import com.rcal.people.model.EntityTypes;
-import com.rcal.people.model.RoleBasicDTO;
-import com.rcal.people.model.SkillBasicDTO;
-import com.rcal.people.model.TeamBasicDTO;
+import com.rcal.people.model.*;
 import com.rcal.people.repository.read.*;
 import com.rcal.people.repository.write.WriteMappingRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -153,6 +150,8 @@ public class MappingService{
 
       case EntityTypes.PERSON :
         return readPersonRepository.findById(entityId.intValue())
+            .map(person -> new PersonBasicDTO(person.getPersonId(),
+                person.getName()))
             .orElseThrow(() -> new RuntimeException(
                 "Person not found with id: " + entityId));
 
