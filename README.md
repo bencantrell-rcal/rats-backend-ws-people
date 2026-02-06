@@ -6,27 +6,27 @@ Backend service that supports the Rcal People App, providing endpoints and data 
 
 This application:
 - Serves REST endpoints for people, roles, teams, skills, and mapping data.
-- Contains logic for managing hierarchical structures and many-to-many mappings.
+- Contains logic for managing hierarchical structures and entity mappings.
 - Deploys to a GKE Autopilot cluster using Cloud Build and Artifact Registry.
 - Connects to a Cloud SQL MySQL instance (with optional local DB setup).
 
 ## People Mappings Overview
 
-Entities in the DB are mapped in simple entity:entity pairs that can mean different things depending on their type
+Entities in the DB are mapped in simple entity:entity pairs. In both the endpoints and the database, mappings are from 
+the lower entity to the higher entity, with the hierarchy being:
+1. roles
+2. people == teams
+3. skills
 
-- PERSON _belongs to_ ROLE
-- ROLE _belongs to_ TEAM
-
-- TEAM _has a_ SKILL
-- ROLE _has a_ SKILL
-- PERSON _has a_ SKILL
-
-- TEAM _is defined as_ DESCRIPTION
-- ROLE _is defined as_ DESCRIPTION
+Note that people cannot be mapped to teams and vice versa.
+In the adding and removing endpoints, the endpoints can be remembered as "adding an X to a Y". I.e. /skill/{}/teams{} is
+"adding a skill to a team".
 
 ## Current Known Issues
 
-- 
+- SOP skill sync logic needs refinement. Need to parse all files in all subdirectories under 'Manufacturing processes'.
+ Title = File name in title case. Description = 'Description' section in SOP (See SOP template).
+- Need to remove pagination from people endpoint to allow filtering
 
 ## Technology Stack
 

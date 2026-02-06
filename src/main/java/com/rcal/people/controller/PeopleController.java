@@ -400,18 +400,35 @@ public class PeopleController{
   // ===========================================================================
 
   // ---------------------------------------------------------------------------
-  // Purpose: Returns all roles (id + name only)
+  // Purpose: Returns all roles with skills
   // ---------------------------------------------------------------------------
   @Tag(name = "roles")
-  @Operation(summary = "Returns all roles (id and name only)")
+  @Operation(summary = "Returns all roles with skills")
   @GetMapping("/roles")
-  public ResponseEntity<List<RoleBasicDTO>> getAllRoles(){
+  public ResponseEntity<List<RoleWithSkillsDTO>> getAllRoles(){
 
     List<RoleBasicDTO> roleBasics = roleService.getAllRoles().stream()
         .map(role -> new RoleBasicDTO(role.getRoleId(), role.getRoleName()))
         .toList();
 
-    return ResponseEntity.ok(roleBasics);
+    List<RoleWithSkillsDTO> result = new ArrayList<>();
+
+    for (RoleBasicDTO role : roleBasics){
+
+      List<SkillBasicDTO> skills = new ArrayList<>();
+
+      List<Mapping> skillMappings = mappingService.getLowerEntities(
+          Long.valueOf(role.getRoleId()),EntityTypes.ROLE,EntityTypes.SKILL);
+
+      for (Mapping mapping : skillMappings){
+        skills.add((SkillBasicDTO) mappingService.getBasicByIdAndEntityType(
+            mapping.getFromEntityId(),EntityTypes.SKILL));
+      }
+
+      result.add(new RoleWithSkillsDTO(role, skills));
+    }
+
+    return ResponseEntity.ok(result);
   }
 
   // ---------------------------------------------------------------------------
